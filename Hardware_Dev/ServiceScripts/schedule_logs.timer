@@ -1,0 +1,9 @@
+[Unit]
+Description=Run Logs Script every 1 hour
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=60min
+
+[Install]
+WantedBy=timers.target

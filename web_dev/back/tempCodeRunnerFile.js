@@ -1,0 +1,2 @@
+
+  temphum.push(req.body);
