@@ -3,41 +3,48 @@
 
 void setup()
 {
-  Serial.begin(9600);                        // Serial connection
-  WiFi.begin("Orange-ESP01S", "esp01sardy"); // WiFi connection
+  Serial.begin(9600);
+  WiFi.begin("Orange-ESP01S", "esp01sardy");
 
   while (WiFi.status() != WL_CONNECTED)
-  { // Wait for the WiFI connection completion
+  {
     delay(500);
+  }
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    Serial.println("LWiFi connected");
+  }
+  else
+  {
+    Serial.println("LWiFi not connected");
   }
 }
 
 void loop()
 {
-  if (WiFi.status() == WL_CONNECTED)
-  { // Check WiFi connection status
-    WiFiClient wifiClient;
-    HTTPClient http; // Declare object of class HTTPClient
 
-    Serial.write('D');
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    WiFiClient wifiClient;
+    HTTPClient http;
+
+    Serial.print("D");
     String s = Serial.readStringUntil('\r');
     delay(300);
 
-    http.begin(wifiClient, "http://192.168.1.7:5030/temphum"); // Specify request destination
-    http.addHeader("Content-Type", "text/plain");              // Specify content-type header
-
-    int httpCode = http.POST(s); // Send the request
+    http.begin(wifiClient, "http://192.168.1.7:5030/temphum");
+    http.addHeader("Content-Type", "text/plain");
+    int httpCode = http.POST(s);
     if (httpCode > 0)
     {
-      if (httpCode == HTTP_CODE_OK)
-      {
-        Serial.print( 'L' + "Data Sent to Express Server");
-      }
+      Serial.println("LResponse code: " + String(httpCode));
     }
-    else {
-        Serial.print( 'L' + "Post message Failed");
-      }
+    else
+    {
+      Serial.println("LError: " + http.errorToString(httpCode));
+    }
     http.end();
   }
+
   delay(200);
 }
