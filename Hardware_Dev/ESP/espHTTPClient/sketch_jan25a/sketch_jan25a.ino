@@ -27,19 +27,16 @@ void loop()
     http.addHeader("Content-Type", "text/plain");              // Specify content-type header
 
     int httpCode = http.POST(s); // Send the request
-
     if (httpCode > 0)
     {
       if (httpCode == HTTP_CODE_OK)
       {
-        const String &payload = http.getString();
-        Serial.print('L' + "received payload");
+        Serial.print( 'L' + "Data Sent to Express Server");
       }
     }
-    else
-    {
-      Serial.print('L' + "[HTTP] POST... failed");
-    }
+    else {
+        Serial.print( 'L' + "Post message Failed");
+      }
     http.end();
   }
   delay(200);
