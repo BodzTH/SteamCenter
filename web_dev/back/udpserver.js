@@ -1,20 +1,44 @@
 require("dotenv").config();
 const dgram = require("dgram");
 const server = dgram.createSocket("udp4");
+const temphumlogs = require("./models/readings");
 const mongoose = require("mongoose");
-require("dotenv").config();
 
-server.on("message", (msg, rinfo) => {
-  console.log(
-    `Received UDP message from ${rinfo.address}:${rinfo.port}: ${msg}`
-  );
+//receive message the message from esp01s
+server.on('message', async (msg, rinfo) => {
+  console.log(`Server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+
+  // Parse the message
+  const data = msg.toString();
+  const humidity = parseFloat(data.split('Humidity: ')[1]);
+  const temp = parseFloat(data.split('Temperature: ')[1]);
+
+  // Save to MongoDB
+  try {
+    const newTempHum = await temphumlogs.create({
+      temp,
+      humidity,
+      date: new Date(),
+    });
+    console.log('Data saved:', newTempHum);
+  } catch (err) {
+    console.error('Error saving data:', err.message);
+  }
 });
 
-server.on("listening", () => {
-  const address = server.address();
-  console.log(`UDP server listening on ${address.address}:${address.port}`);
-});
+//connect to local MongoDB
+mongoose
+  .connect("mongodb://localhost:27017/TempLogs")
+  .then(() => {
+    //listen for server
+    server.on("listening", () => {
+      const address = server.address();
+      console.log(`Connected to DB & UDP server listening on ${address.address}:${address.port}`);
+    });
+  })
+  .catch((err) => console.log(err));
 
+//bind server to IP and port
 const IP = process.env.IP;
 const PORT = process.env.PORTUDP;
 server.bind({

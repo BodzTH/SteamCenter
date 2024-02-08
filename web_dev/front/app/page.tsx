@@ -3,7 +3,6 @@ import axios from "axios";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
-// ... (imports)
 
 function Home() {
   const [reads, setReads] = useState<any[]>([]);
@@ -26,10 +25,6 @@ function Home() {
       setLoading(false);
     }
   }
-
-  useEffect(() => {
-    getTempReadings();
-  }, []); // Fetch readings on component mount
 
   return (
     <div className="container mx-auto p-4">

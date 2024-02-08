@@ -1,2 +1,1 @@
-
-  temphum.push(req.body);
+const mongoose=require('mongoose');
