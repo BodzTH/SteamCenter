@@ -37,5 +37,5 @@ void loop()
   Udp.print(s);
   Udp.endPacket();
 
-  delay(700); // Delay for demonstration purposes
+  delay(1500); // Delay for demonstration purposes
 }
