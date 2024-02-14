@@ -10,7 +10,8 @@
   "scripts": {
     "start": "node server.js",
     "dev1": "nodemon httpserver.js",
-    "dev2": "nodemon udpserver.js"
+    "dev2": "nodemon udpserver.js",
+    "dev3": "nodemon aiudpserver.js"
   },
   "name": "back",
   "version": "1.0.0",

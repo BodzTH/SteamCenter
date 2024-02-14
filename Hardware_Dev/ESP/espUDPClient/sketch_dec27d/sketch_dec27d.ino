@@ -2,11 +2,11 @@
 #include <WiFiUdp.h>
 
 #ifndef STASSID
-#define STASSID "Orange-ESP01S"
-#define STAPSK "esp01sardy"
+#define STASSID "#_#"
+#define STAPSK "MKnuby@ggezpz55"
 #endif
 
-IPAddress serverIP(192, 168, 1, 7); // Server's IP address
+IPAddress serverIP(192, 168, 1, 16); // Server's IP address
 unsigned int serverPort = 5040;     // Server's port
 
 char packetBuffer[255];

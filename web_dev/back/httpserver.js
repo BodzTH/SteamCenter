@@ -29,7 +29,7 @@ app.get("/nextThum", (req, res) => {
 mongoose
   .connect("mongodb://localhost:27017/temp")
   .then(() => {
-    const IP = process.env.IP; // replace with your desired IP
+    const IP = process.env.IP1; // replace with your desired IP
     const PORT = process.env.PORTHTTP; // replace with your desired HTTP port number
     app.listen(PORT, IP, () => {
       console.log(`Connected to DB & HTTP server is running on ${IP}:${PORT}`);

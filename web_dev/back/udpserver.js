@@ -49,8 +49,8 @@ mongoose
   .catch((err) => console.log(err));
 
 //bind server to IP and port
-const IP = process.env.IP;
-const PORT = process.env.PORTUDP;
+const IP = process.env.IP2;
+const PORT = process.env.PORTUDP1;
 server.bind({
   address: IP,
   port: PORT,
