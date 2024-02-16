@@ -1,64 +1,35 @@
 'use client';
-import axios from "axios";
-import Image from "next/image";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 
 function Home() {
-  const [reads, setReads] = useState<any[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function getTempReadings() {
-    try {
-      setLoading(true);
-      const response = await axios.get<any[]>(
-        "http://192.168.1.7:5030/nextThum"
-      );
-      const newReads = response.data;
-      setReads(newReads);
-      setError(null);
-    } catch (error) {
-      console.error("Error fetching readings:", error);
-      setError("Error fetching readings. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Noise Pollution Readings</h1>
-      <div className="flex mb-4">
-        <input
-          className="border border-gray-400 p-2 mr-2 flex-1"
-          type="text"
-          placeholder="Enter your value"
-        />
-        <button
-          className="bg-blue-500 text-white p-2 rounded"
-          onClick={handleClick}
-        >
-          Refresh Readings
-        </button>
+    <main >
+      <div className="welcome-image">
       </div>
-      {loading && <p>Loading...</p>}
-      {error && <p className="text-red-500">{error}</p>}
-      <div>
-        {reads.length > 0 && (
-          <ul className="list-disc pl-4">
-            {reads.map((reading, index) => (
-              <li key={index}>{reading}</li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </div>
-  );
+      <div >
 
-  function handleClick() {
-    getTempReadings();
-  }
+      </div>
+
+      <div id="about-us" className="aboutus">
+        <h1>About Us</h1>
+        <p className="about-us-text">
+          Welcome to our online bookstore! This project is the brainchild of a group of dedicated Computer Engineering students who share a common passion for books and technology. Our mission is to create a user-friendly platform that makes discovering and purchasing books an enjoyable and seamless experience. We understand the importance of a good book and the role it plays in shaping minds. That&apos;s why we&apos;ve designed our bookstore to cater to all kinds of readers, offering a wide range of genres.
+        </p>
+      </div>
+
+      <div id="contact-us" className="contactus">
+
+        Contact us:
+        <a href="mailto:BookStore@example.com">Abdelrahman.Khalil@gu.edu.eg</a>
+      </div>
+
+    </main>
+  )
+
 }
+
 
 export default Home;

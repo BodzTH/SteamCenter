@@ -40,7 +40,6 @@ body {
   background-repeat: no-repeat;
 }
 
-
 /* Bookcard image HomePage */
 .imageHome {
   border-radius: 10px;
@@ -429,20 +428,14 @@ body {
   position: relative;
   right: 12px !important;
   bottom: 5px !important;
-  transition:
-    background-color 0.3s ease,
-    color 0.3s ease,
-    transform 0.3s ease;
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
 }
 
 .addtocart:hover,
 .addtocart:focus {
   background: white;
   color: black;
-  transition:
-    background-color 0.3s ease,
-    color 0.3s ease,
-    transform 0.3s ease;
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
   box-sizing: border-box;
   outline: 2px solid black;
 }
@@ -452,7 +445,6 @@ body {
   color: black;
   outline: none; /* Remove the outline */
 }
-
 
 .products {
   display: flex;
@@ -473,7 +465,6 @@ body {
   margin-top: auto;
 }
 
-
 /* Search Page */
 .searchContainer {
   margin-top: 50px;
@@ -481,7 +472,7 @@ body {
   display: flex;
   height: 440px;
   width: 1200px;
-  border-bottom: 1px solid black; 
+  border-bottom: 1px solid black;
 }
 
 .searchImage-container {
@@ -513,7 +504,6 @@ body {
   padding: 20px;
 }
 
-
 .searchBook-description {
   margin-bottom: 10px;
   overflow: hidden;
@@ -525,8 +515,7 @@ body {
   @apply gap-80;
 }
 
-
-.catlinks{
+.catlinks {
   display: block !important;
   min-width: 200px;
 }
