@@ -1,3 +1,4 @@
+'use client'
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -18,20 +19,20 @@ function Search() {
 
 
     return (
-        <>
-            <button className='pr-2 flexBetween' onClick={() => { handleSearch() }}>
+        <div className='flexStart mr-5'>
+            <button className='pr-2 flexBetween ml-20 ' onClick={() => { handleSearch() }}>
                 <Link href={`/search?q=${searchTerm}`}>
                     <Image
                         src="/search.svg"
                         alt="Bookz"
-                        width={32}
+                        width={45}
                         height={10}
                     />
                 </Link>
             </button>
             <input
                 className="searchbar text-center placeholder:white"
-                placeholder={"Search"}
+                placeholder={"search for a device..."}
                 onBlur={(e) => {
                     setSearchTerm(e.currentTarget.value); // Update the search term state
                 }}
@@ -40,14 +41,15 @@ function Search() {
                         const inputValue = e.currentTarget.value.trim();
                         if (inputValue) { // Check if the input value is not empty
                             setSearchTerm(inputValue); // Update the search term state
-                            router.push(`/search?q=${inputValue}`); // Navigate to the search page
+                            router.push(`/searxch?q=${inputValue}`); // Navigate to the search page
                         }
                     }
                 }}
                 defaultValue={searchTerm}
             />
 
-        </>
+
+        </div>
     );
 }
 

@@ -1,9 +1,5 @@
-'use client'
 import Link from 'next/link';
 import Image from 'next/image';
-import Search from '@/components/Search';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 
 function Navbar() {
 
@@ -24,7 +20,7 @@ function Navbar() {
 
         {/* Title */}
         <div className='flexBetween ml-10'>
-          <h1 className='lobester text-3xl flexBetween flex-shrink-0 '>
+          <h1 className=' text-3xl flexBetween flex-shrink-0 '>
             The Big Fu** Organization For Noise Reduction
           </h1>
         </div>
@@ -33,7 +29,7 @@ function Navbar() {
           <div className='flexBetween'>
 
             {/* Search bar */}
-            <Search />
+
           </div>
 
           <div className='flexBetween flex-shrink-0'>
@@ -42,7 +38,7 @@ function Navbar() {
           </div>
 
           <div>
-            <ul className=' flexBetween pb-10 pt-10 gap-7 font-medium flex-shrink-0'>
+            <ul className=' flexBetween pb-10 pt-10 gap-7 text-2xl flex-shrink-0 '>
               <Link href={"/reports"}>Reports</Link>
 
             </ul>

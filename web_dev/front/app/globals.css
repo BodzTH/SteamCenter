@@ -1,5 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Lobster+Two&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Anta&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -12,25 +13,12 @@
 }
 
 body {
-  font-family: "Arial", sans-serif;
+  font-family: "Roboto";
   background-color: #ffffff;
   color: #000000;
   font-size: larger;
   scrollbar-width: thin;
   scrollbar-color: black transparent;
-}
-
-.lobester {
-  font-family: "Lobster Two";
-}
-
-.merriweather {
-  font-family: "Merriweather";
-}
-
-.imageCat {
-}
-.imageSearch {
 }
 
 /* category title underline */
@@ -206,7 +194,7 @@ body {
 
 /* Search Bar */
 .searchbar {
-  @apply flex items-center justify-between w-64 h-7 rounded-full bg-black outline-none transition-all duration-300;
+  @apply flex items-center justify-between w-96 h-8 rounded-full bg-black outline-none transition-all duration-300;
   border: 2px solid black;
   padding: 0 10px;
   color: white; /* Updated color to white */
@@ -241,7 +229,7 @@ body {
 
 .counter {
   transition: all 0.3s ease;
-  font-size: 12px;
+  font-size: 26px;
   font-weight: bold;
   color: white;
   text-align: center;
