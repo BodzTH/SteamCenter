@@ -72,4 +72,3 @@ server.bind({
   port: PORT,
   exclusive: true,
 });
-console.log(`UDP server is running on ${IP}:${PORT}`);
