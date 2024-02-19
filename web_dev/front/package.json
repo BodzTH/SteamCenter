@@ -10,7 +10,11 @@
     "nd": "nodemon readMongoDB.js"
   },
   "dependencies": {
+    "@googlemaps/js-api-loader": "^1.16.6",
+    "@react-google-maps/api": "^2.19.3",
+    "@types/google.maps": "^3.55.3",
     "axios": "^1.6.7",
+    "dotenv": "^16.4.4",
     "mongodb": "^6.3.0",
     "mongoose": "^8.1.2",
     "nodemon": "^3.0.3",

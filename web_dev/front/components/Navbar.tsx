@@ -21,7 +21,7 @@ function Navbar() {
         {/* Title */}
         <div className='flexBetween ml-10'>
           <h1 className=' text-3xl flexBetween flex-shrink-0 '>
-            The Big Fu** Organization For Noise Reduction
+            Organization For Noise Reduction
           </h1>
         </div>
         {/* Search block */}

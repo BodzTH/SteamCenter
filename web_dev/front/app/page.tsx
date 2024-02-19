@@ -6,7 +6,7 @@ function Home() {
 
   return (
     <main >
-      <div className="flexBetween mb-5 border-b-2 border-border-color">
+      <div className="flexBetween mb-10 border-b-2 border-border-color">
         <div className="flexStart">
           <h1 className='text-5xl ml-5 mb-5 mr-2'>
             Devices

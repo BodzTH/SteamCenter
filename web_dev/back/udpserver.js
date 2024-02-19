@@ -1,52 +1,61 @@
 require("dotenv").config();
 const dgram = require("dgram");
 const server = dgram.createSocket("udp4");
-const temphumlogs = require("./models/readings");
 const mongoose = require("mongoose");
 
 server.on("message", async (msg, rinfo) => {
   console.log(`Server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
 
-  // Parse the incoming message to extract data
-  const messageParts = msg.toString().split("\n");
+  // Parse the incoming message as JSON
+  let data;
+  try {
+    data = JSON.parse(msg);
+  } catch (err) {
+    console.error(`Error parsing message as JSON: ${err.message}`);
+    return;
+  }
 
-  if (messageParts.length === 2) {
-    const datetimePart = messageParts[0].trim();
-    const humidityPart = messageParts[1].match(/Humidity: (\d+\.\d+)% Temperature: (\d+\.\d+)C/);
-
-    if (humidityPart) {
-      const date = datetimePart.split(" ")[0];
-      const time = datetimePart.split(" ")[1];
-      const humidity = parseFloat(humidityPart[1]);
-      const temp = parseFloat(humidityPart[2]);
-
-      // Save to MongoDB
-      try {
-        const newTempHum = await temphumlogs.create({
-          temp,
-          humidity,
-          date,
-          time,
-        });
-        console.log("Data saved:", newTempHum);
-      } catch (err) {
-        console.error("Error saving data:", err.message);
-      }
-    } else {
-      console.error("Invalid humidity and temperature format");
+  // Check if the JSON object has a checkId property
+  if (data.hasOwnProperty("checkId")) {
+    let checkId = data.checkId;
+    console.log(`Received checkId: ${checkId}`);
+    if (checkId) {
+      // Send an "OK" message back
+      const response = "OK";
+      server.send(response, rinfo.port, rinfo.address, (err) => {
+        if (err) {
+          console.error(`Error sending response: ${err.message}`);
+        } else {
+          console.log(`Sent response: ${response}`);
+        }
+      });
     }
-  } else {
-    console.error("Invalid message format");
+  }
+  // Check if the JSON object has Humidity, Temperature, Latitude, Longitude, date, and time properties
+  else if (
+    data.hasOwnProperty("Humidity") &&
+    data.hasOwnProperty("Temperature") &&
+    data.hasOwnProperty("Latitude") &&
+    data.hasOwnProperty("Longitude") &&
+    data.hasOwnProperty("date") &&
+    data.hasOwnProperty("time")
+  ) {
+    let humidity = data.Humidity;
+    let temperature = data.Temperature;
+    let latitude = data.Latitude;
+    let longitude = data.Longitude;
+    let date = data.date;
+    let time = data.time;
+    console.log(
+      `Received data: Humidity=${humidity}, Temperature=${temperature}, Latitude=${latitude}, Longitude=${longitude}, Date=${date}, Time=${time}`
+    );
+    // Handle the received data...
   }
 });
 
-
-
-//connect to local MongoDB
 mongoose
   .connect("mongodb://localhost:27017/TempLogs")
   .then(() => {
-    //listen for server
     server.on("listening", () => {
       const address = server.address();
       console.log(
@@ -56,7 +65,6 @@ mongoose
   })
   .catch((err) => console.log(err));
 
-//bind server to IP and port
 const IP = process.env.IP2;
 const PORT = process.env.PORTUDP1;
 server.bind({
