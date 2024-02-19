@@ -1,50 +1,29 @@
-'use client';
-import React, { useEffect } from 'react';
-import { Loader } from '@googlemaps/js-api-loader';
-interface MapProps {
-    long: number;
-    lat: number;
-}
+import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css'
 
-function Map({ long, lat }: MapProps) {
-    const mapRef = React.useRef<HTMLDivElement>(null);
-    useEffect(() => {
-        const initMap = async () => {
-            const loader = new Loader({
-                apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string,
-                version: "weekly",
-            }
-            )
-            const { Map } = await loader.importLibrary('maps');
-            //init marker
-            const { Marker } = await loader.importLibrary('marker') as google.maps.MarkerLibrary;
-            const location = {
-                lng: long
-                , lat: lat
-            };
+// Define your icon
+const myIcon = L.icon({
+    iconUrl: '/noun-location.svg', // the URL of the icon image
+    iconSize: [38, 95], // size of the icon
+    iconAnchor: [22, 94], // point of the icon which will correspond to marker's location
+    popupAnchor: [-3, -76] // point from which the popup should open relative to the iconAnchor
+});
 
-            const mapOptions: google.maps.MapOptions = {
-                center: location,
-                zoom: 8,
-                mapId: 'neweed'
-            };
-
-            //set the map 
-            const map = new Map(mapRef.current as HTMLDivElement, mapOptions);
-
-            //put a marker on the map
-            const marker = new Marker({
-                position: location,
-                map: map,
-                title: 'Hello World!'
-            });
-        }
-        initMap();
-    }, [long, lat]);
-
+function Mapdum() {
     return (
-        <div ref={mapRef} />
+        <MapContainer style={{ height: "15vh", width: "100%" }} center={[30, 31]} zoom={50} scrollWheelZoom={false}>
+            <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <Marker position={[30, 31]} icon={myIcon}>
+                <Popup>
+                    Delta1 device
+                </Popup>
+            </Marker>
+        </MapContainer>
     )
 }
 
-export default Map;
+export default Mapdum

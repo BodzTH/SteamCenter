@@ -1,0 +1,19 @@
+{
+  "bracketSameLine": false,
+  "singleQuote": true,
+  "arrowParens": "avoid",
+  "semi": false,
+  "trailingComma": "all",
+  "printWidth": 110,
+  "importOrder": [
+    "^@root/(.*)$",
+    "^@pages/(.*)$",
+    "^@components/(.*)$",
+    "^@src/(.*)$",
+    "^@lib/(.*)$",
+    "^[./]"
+  ],
+  "importOrderSortSpecifiers": true,
+  "importOrderSeparation": true,
+  "importOrderGroupNamespaceSpecifiers": true
+}

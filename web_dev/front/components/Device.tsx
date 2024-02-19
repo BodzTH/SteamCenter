@@ -2,11 +2,7 @@
 import axios from 'axios';
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-
-// const center = {
-//     lat: -3.745,
-//     lng: -38.523,
-// };
+import Map from './index';
 
 const Device = React.memo(() => {
     const [data, setData] = useState<any>(null);
@@ -22,7 +18,6 @@ const Device = React.memo(() => {
             });
     }, []);
     Device.displayName = 'Device';
-
     return (
         <>
             <div className='flex border-b-2 pb-5 gap-64 border-border-color  mb-10'>
@@ -52,6 +47,11 @@ const Device = React.memo(() => {
                     </div>
                 </div>
                 <div className='flex gap-10'>
+
+
+                    <Map />
+
+
                     <div>
                         <h1 className='mb-10'>
                             Place_id : {data?.place_id}
@@ -78,6 +78,7 @@ const Device = React.memo(() => {
                     </div>
                 </div>
             </div>
+
         </>
     );
 });
