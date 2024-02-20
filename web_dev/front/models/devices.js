@@ -1,6 +1,11 @@
 const mongoose = require("mongoose");
+const { Schema } = mongoose;
 
 const deviceSchema = new mongoose.Schema({
+  deviceName: {
+    type: String,
+    required: true,
+  },
   deviceId: {
     type: Number,
     required: true,
@@ -17,22 +22,16 @@ const deviceSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  place: {
-    type: String,
-    required: true,
-  },
-  location: {
-    type: {
-      type: String,
-      default: "Point",
-    },
-    coordinates: {
-      type: [Number],
-      required: true,
-    },
-  },
   coverage: {
     type: Number,
+    required: true,
+  },
+  latitude: {
+    type: Schema.Types.Decimal128,
+    required: true,
+  },
+  longitude: {
+    type: Schema.Types.Decimal128,
     required: true,
   },
 });

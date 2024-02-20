@@ -7,6 +7,7 @@
 #define STASSID "#_#"
 #define STAPSK "MKnuby@ggezpz55"
 
+const int deviceId = 1;
 IPAddress serverIP(192, 168, 1, 16); // Server's IP address
 unsigned int serverPort = 5040;      // Server's port
 
@@ -41,7 +42,7 @@ bool checkDeviceId()
   bool isDeviceId = true;
   for (int i = 0; i < 3; i++)
   {
-    checkId["checkId"] = "1";
+    checkId["deviceId"] = deviceId;
     Udp.beginPacket(serverIP, serverPort);
     ArduinoJson::serializeJson(checkId, Udp);
     Udp.endPacket();
@@ -76,16 +77,32 @@ bool checkDeviceId()
 void sendJsonData()
 {
   // Create a JSON object
-  StaticJsonDocument<200> doc;
+  Serial.print("P");
+  String json = Serial.readStringUntil('\r');
+  delay(300);
 
+  StaticJsonDocument<200> loc;
+
+  DeserializationError error = deserializeJson(loc, json);
+  if (error)
+  {
+    return;
+  }
+
+  StaticJsonDocument<200> doc;
   // Add data to the JSON object
-  doc["processUnit"] = "ESP01S";
+  doc["processUnit"] = "ArduinoUNO";
   doc["wirelessModule"] = "ESP01S";
   doc["micModule"] = "MAX4466";
   doc["coverage"] = 100;
   doc["deviceName"] = "Delta1";
-  doc["deviceId"] = "1";
+  doc["deviceId"] = deviceId;
   doc["image"] = "/home/bodz/SteamCenter/web_dev/database/device1.jpeg";
+
+  for (JsonPair kv : loc.as<JsonObject>())
+  {
+    doc[kv.key()] = kv.value();
+  }
 
   // Send the JSON string over UDP
   Udp.beginPacket(serverIP, serverPort);
@@ -143,7 +160,7 @@ void loop()
   }
 
   // Create a new JSON document for the date and time
-  StaticJsonDocument<400> combinedDoc;
+  StaticJsonDocument<200> combinedDoc;
   combinedDoc["date"] = currentDate;
   combinedDoc["time"] = currentTime;
 
@@ -157,5 +174,5 @@ void loop()
   ArduinoJson::serializeJson(combinedDoc, Udp); // Send the combined JSON
   Udp.endPacket();
 
-  delay(1500); // Delay for demonstration purposes
+  delay(3000); // Delay for demonstration purposes
 }

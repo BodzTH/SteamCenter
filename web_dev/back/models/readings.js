@@ -1,16 +1,17 @@
 const mongoose = require("mongoose");
+const { Schema } = mongoose;
 
 const tempHumSchema = new mongoose.Schema({
-  temp: {
-    type: Number,
+  temperature: {
+    type: Schema.Types.Decimal128,
     required: true,
   },
   humidity: {
-    type: Number,
+    type: Schema.Types.Decimal128,
     required: true,
   },
   date: {
-    type: String, 
+    type: String,
     required: true,
   },
   time: {

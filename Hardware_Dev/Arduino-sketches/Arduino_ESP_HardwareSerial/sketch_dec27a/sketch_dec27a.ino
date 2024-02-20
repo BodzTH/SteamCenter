@@ -4,8 +4,8 @@
 #include <ArduinoJson.h>
 
 // Global variable declaration
-int lng = 31;
-int lat = 30;
+double lng = 31313657;
+double lat = 29968199;
 
 #define I2C_ADDR 0x27 // Set the LCD address to 0x27 or the address you're using
 #define LCD_COLS 16   // Define the columns of your LCD
@@ -45,8 +45,8 @@ void loop()
       // Add data to the JSON object
       doc["Humidity"] = humidity;
       doc["Temperature"] = temperature;
-      doc["Latitude"] = lat;
-      doc["Longitude"] = lng;
+      doc["Latitude"] = lat / 1000000.0;
+      doc["Longitude"] = lng / 1000000.0;
 
       // Print the JSON object
       serializeJson(doc, Serial);
@@ -71,9 +71,13 @@ void loop()
         lcd.print(text.substring(16));
       }
     }
-    else if (command == 'B')
+    else if (command == 'P')
     {
-      Serial.println("");
+      StaticJsonDocument<200> loc;
+      loc["Latitude"] = lat / 1000000.0;
+      loc["Longitude"] = lng / 1000000.0;
+      serializeJson(loc, Serial);
+      Serial.println();
     }
     else if (command == 'G')
     {

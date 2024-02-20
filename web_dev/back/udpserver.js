@@ -21,33 +21,125 @@ const Model1 = connection1.model("Model1", temphumlogsSchema, "temphumlogs");
 
 // Define a model for collection 'devices' in db2
 const Model2 = connection2.model("Model2", devicesSchema, "devices");
-
+function isValidJson(str) {
+  try {
+    JSON.parse(str);
+  } catch (e) {
+    return false;
+  }
+  return true;
+}
 server.on("message", async (msg, rinfo) => {
   console.log(`Server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
 
-  // Parse the incoming message as JSON
+  if (!isValidJson(msg)) {
+    console.error(`Received message is not valid JSON: ${msg}`);
+    return;
+  }
+
   let data;
   try {
     data = JSON.parse(msg);
   } catch (err) {
-    console.error(`Error parsing message as JSON: ${err.message}`);
+    console.error(`Error parsing message: ${err.message}`);
     return;
   }
 
-  // Check if the JSON object has a checkId property
-  if (data.hasOwnProperty("checkId")) {
-    let checkId = data.checkId;
-    console.log(`Received checkId: ${checkId}`);
-    if (checkId) {
-      // Send an "OK" message back
-      const response = "OK";
+  let deviceId;
+  if (!data.hasOwnProperty("deviceName") && data.hasOwnProperty("deviceId")) {
+    deviceId = data.deviceId;
+    console.log(`Received deviceId: ${deviceId}`);
+
+    let device;
+    try {
+      device = await Model2.findOne({ deviceId: deviceId });
+    } catch (err) {
+      console.error(`Error querying devices collection: ${err.message}`);
+      return;
+    }
+
+    let response;
+    if (device) {
+      response = "OK";
+    } else {
+      response = "NO";
+    }
+
+    // Wrap server.send in a Promise
+    const sendResponse = new Promise((resolve, reject) => {
       server.send(response, rinfo.port, rinfo.address, (err) => {
         if (err) {
           console.error(`Error sending response: ${err.message}`);
+          reject(err);
         } else {
           console.log(`Sent response: ${response}`);
+          resolve();
         }
       });
+    });
+
+    try {
+      // Wait for the response to be sent before proceeding
+      await sendResponse;
+    } catch (err) {
+      console.error(`Error sending response: ${err.message}`);
+      return;
+    }
+
+    // Wrap server.on("message") in a Promise
+    const waitForMessage = new Promise((resolve, reject) => {
+      server.on("message", (msg, rinfo) => {
+        if (!isValidJson(msg)) {
+          console.error(`Received message is not valid JSON: ${msg}`);
+          return;
+        }
+
+        let data;
+        try {
+          data = JSON.parse(msg);
+        } catch (err) {
+          console.error(`Error parsing message: ${err.message}`);
+          return;
+        }
+
+        if (
+          data.hasOwnProperty("processUnit") &&
+          data.hasOwnProperty("wirelessModule") &&
+          data.hasOwnProperty("micModule") &&
+          data.hasOwnProperty("coverage") &&
+          data.hasOwnProperty("deviceName") &&
+          data.hasOwnProperty("image") &&
+          data.hasOwnProperty("Latitude") &&
+          data.hasOwnProperty("Longitude")
+        ) {
+          resolve({ data, rinfo });
+        }
+      });
+    });
+
+    try {
+      const { data, rinfo } = await waitForMessage;
+
+      let newDevice = new Model2({
+        processUnit: data.processUnit,
+        wirelessModule: data.wirelessModule,
+        micModule: data.micModule,
+        coverage: data.coverage,
+        deviceName: data.deviceName,
+        deviceId: data.deviceId,
+        image: data.image,
+        latitude: data.Latitude,
+        longitude: data.Longitude,
+      });
+
+      try {
+        await newDevice.save();
+        console.log(`Saved new device: ${JSON.stringify(newDevice)}`);
+      } catch (err) {
+        console.error(`Error saving new device: ${err.message}`);
+      }
+    } catch (err) {
+      console.error(`Error waiting for message: ${err.message}`);
     }
   }
   // Check if the JSON object has Humidity, Temperature, Latitude, Longitude, date, and time properties
@@ -59,12 +151,43 @@ server.on("message", async (msg, rinfo) => {
     data.hasOwnProperty("date") &&
     data.hasOwnProperty("time")
   ) {
-    let humidity = data.Humidity;
-    let temperature = data.Temperature;
-    let latitude = data.Latitude;
-    let longitude = data.Longitude;
+    let humidity = parseFloat(data.Humidity.toString());
+    let temperature = parseFloat(data.Temperature.toString());
+    let latitude = parseFloat(data.Latitude.toString());
+    let longitude = parseFloat(data.Longitude.toString());
     let date = data.date;
     let time = data.time;
+
+    // Create a new document in the 'temphumlogs' collection
+    const newLog = new Model1({
+      humidity: humidity,
+      temperature: temperature,
+      date: date,
+      time: time,
+    });
+
+    try {
+      // Save the new document to the database
+      await newLog.save();
+      console.log("New log saved to TempLogs database.");
+    } catch (err) {
+      console.error(
+        `Error saving new log to TempLogs database: ${err.message}`
+      );
+    }
+
+    // Update the 'devices' document with deviceId 1
+    try {
+      await Model2.updateOne(
+        { deviceId: deviceId },
+        { $set: { latitude: latitude, longitude: longitude } }
+      );
+      console.log("Device location updated in hardwareDB database.");
+    } catch (err) {
+      console.error(
+        `Error updating device location in hardwareDB database: ${err.message}`
+      );
+    }
   }
 });
 
@@ -114,7 +237,7 @@ async function fetchAllDocs() {
   }
 }
 
-fetchAllDocs();
+// fetchAllDocs();
 
 const IP = process.env.IP2;
 const PORT = process.env.PORTUDP1;
