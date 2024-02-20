@@ -45,9 +45,13 @@ server.on("message", async (msg, rinfo) => {
     return;
   }
 
-  let deviceId;
-  if (!data.hasOwnProperty("deviceName") && data.hasOwnProperty("deviceId")) {
-    deviceId = data.deviceId;
+  if (
+    !data.hasOwnProperty("deviceName") &&
+    data.hasOwnProperty("deviceId") &&
+    !data.hasOwnProperty("date") &&
+    !data.hasOwnProperty("time")
+  ) {
+    let deviceId = data.deviceId;
     console.log(`Received deviceId: ${deviceId}`);
 
     let device;
@@ -149,14 +153,17 @@ server.on("message", async (msg, rinfo) => {
     data.hasOwnProperty("Latitude") &&
     data.hasOwnProperty("Longitude") &&
     data.hasOwnProperty("date") &&
-    data.hasOwnProperty("time")
+    data.hasOwnProperty("time") &&
+    data.hasOwnProperty("deviceId") // Ensure deviceId is in the data
   ) {
-    let humidity = parseFloat(data.Humidity.toString());
-    let temperature = parseFloat(data.Temperature.toString());
-    let latitude = parseFloat(data.Latitude.toString());
-    let longitude = parseFloat(data.Longitude.toString());
+    let humidity = data.Humidity;
+    let temperature = data.Temperature;
+    let Latitude = parseFloat(data.Latitude);
+    let Longitude = parseFloat(data.Longitude);
+    console.log(`Received data: ${humidity}, ${temperature}, ${Latitude}, ${Longitude}`);
     let date = data.date;
     let time = data.time;
+    let deviceId = data.deviceId; // Update deviceId from the data
 
     // Create a new document in the 'temphumlogs' collection
     const newLog = new Model1({
@@ -180,7 +187,7 @@ server.on("message", async (msg, rinfo) => {
     try {
       await Model2.updateOne(
         { deviceId: deviceId },
-        { $set: { latitude: latitude, longitude: longitude } }
+        { $set: { latitude: Latitude, longitude: Longitude } }
       );
       console.log("Device location updated in hardwareDB database.");
     } catch (err) {

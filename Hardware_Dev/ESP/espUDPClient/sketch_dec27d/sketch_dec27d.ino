@@ -163,6 +163,8 @@ void loop()
   StaticJsonDocument<200> combinedDoc;
   combinedDoc["date"] = currentDate;
   combinedDoc["time"] = currentTime;
+  combinedDoc["deviceId"] = deviceId;
+
 
   // Copy each key-value pair from doc to dateDoc
   for (JsonPair kv : doc.as<JsonObject>())
