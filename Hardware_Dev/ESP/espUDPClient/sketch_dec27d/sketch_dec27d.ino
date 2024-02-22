@@ -4,12 +4,42 @@
 #include <ArduinoJson.h>
 #include <TimeLib.h>
 
+#ifndef STASSID
 #define STASSID "#_#"
-#define STAPSK "MKnuby@ggezpz55"
+#endif
 
-const int deviceId = 1;
-IPAddress serverIP(192, 168, 1, 16); // Server's IP address
-unsigned int serverPort = 5040;      // Server's port
+#ifndef STAPSK
+#define STAPSK "MKnuby@ggezpz55"
+#endif
+
+#ifndef DEVICE_ID
+#define DEVICE_ID 1
+#endif
+
+#ifndef SERVER_IP1
+#define SERVER_IP1 192
+#endif
+
+#ifndef SERVER_IP2
+#define SERVER_IP2 168
+#endif
+
+#ifndef SERVER_IP3
+#define SERVER_IP3 1
+#endif
+
+#ifndef SERVER_IP4
+#define SERVER_IP4 16
+#endif
+
+#ifndef SERVER_PORT
+#define SERVER_PORT 5040
+#endif
+
+// Then use the defined values to initialize the variables
+const int deviceId = DEVICE_ID;
+IPAddress serverIP(SERVER_IP1, SERVER_IP2, SERVER_IP3, SERVER_IP4);
+unsigned int serverPort = SERVER_PORT;
 
 char packetBuffer[255];
 
@@ -78,50 +108,52 @@ void sendJsonData()
 {
   // Create a JSON object
   Serial.print("P");
-  String json = Serial.readStringUntil('\r');
-  delay(300);
-
-  StaticJsonDocument<200> loc;
-
-  DeserializationError error = deserializeJson(loc, json);
-  if (error)
+  delay(500);
+  if (Serial.available() > 0)
   {
-    return;
+    String json = Serial.readStringUntil('\r');
+    delay(300);
+
+    StaticJsonDocument<200> loc;
+
+    DeserializationError error = deserializeJson(loc, json);
+    if (error)
+    {
+      return;
+    }
+
+    StaticJsonDocument<200> doc;
+    // Add data to the JSON object
+    doc["processUnit"] = "ArduinoUNO";
+    doc["wirelessModule"] = "ESP01S";
+    doc["micModule"] = "MAX4466";
+    doc["coverage"] = 100;
+    doc["deviceName"] = "Delta1";
+    doc["deviceId"] = deviceId;
+    doc["image"] = "/home/bodz/SteamCenter/web_dev/database/device1.jpeg";
+
+    for (JsonPair kv : loc.as<JsonObject>())
+    {
+      doc[kv.key()] = kv.value();
+    }
+
+    // Send the JSON string over UDP
+    Udp.beginPacket(serverIP, serverPort);
+    ArduinoJson::serializeJson(doc, Udp); // Send the combined JSON
+    Udp.endPacket();
   }
-
-  StaticJsonDocument<200> doc;
-  // Add data to the JSON object
-  doc["processUnit"] = "ArduinoUNO";
-  doc["wirelessModule"] = "ESP01S";
-  doc["micModule"] = "MAX4466";
-  doc["coverage"] = 100;
-  doc["deviceName"] = "Delta1";
-  doc["deviceId"] = deviceId;
-  doc["image"] = "/home/bodz/SteamCenter/web_dev/database/device1.jpeg";
-
-  for (JsonPair kv : loc.as<JsonObject>())
-  {
-    doc[kv.key()] = kv.value();
-  }
-
-  // Send the JSON string over UDP
-  Udp.beginPacket(serverIP, serverPort);
-  ArduinoJson::serializeJson(doc, Udp); // Send the combined JSON
-  Udp.endPacket();
 }
 
 String getCurrentDate(time_t rawTime)
 {
   return String(year(rawTime)) + "/" + // Convert to date string
-         String(month(rawTime)) + "/" +
-         String(day(rawTime));
+         String(month(rawTime)) + "/" + String(day(rawTime));
 }
 
 String getCurrentTime(time_t rawTime)
 {
   return String(hour(rawTime)) + ":" + // Convert to time string
-         String(minute(rawTime)) + ":" +
-         String(second(rawTime));
+         String(minute(rawTime)) + ":" + String(second(rawTime));
 }
 
 void setup()
@@ -150,31 +182,34 @@ void loop()
   String currentTime = getCurrentTime(rawTime);
 
   Serial.print("D");
-  String json = Serial.readStringUntil('\r');
   delay(300);
-  StaticJsonDocument<200> doc;
-  DeserializationError error = deserializeJson(doc, json);
-  if (error)
+  if (Serial.available() > 0)
   {
-    return;
+    String json = Serial.readStringUntil('\r');
+    delay(300);
+    StaticJsonDocument<200> doc;
+    DeserializationError error = deserializeJson(doc, json);
+    if (error)
+    {
+      return;
+    }
+
+    // Create a new JSON document for the date and time
+    StaticJsonDocument<200> combinedDoc;
+    combinedDoc["date"] = currentDate;
+    combinedDoc["time"] = currentTime;
+    combinedDoc["deviceId"] = deviceId;
+
+    // Copy each key-value pair from doc to dateDoc
+    for (JsonPair kv : doc.as<JsonObject>())
+    {
+      combinedDoc[kv.key()] = kv.value();
+    }
+
+    Udp.beginPacket(serverIP, serverPort);
+    ArduinoJson::serializeJson(combinedDoc, Udp); // Send the combined JSON
+    Udp.endPacket();
   }
-
-  // Create a new JSON document for the date and time
-  StaticJsonDocument<200> combinedDoc;
-  combinedDoc["date"] = currentDate;
-  combinedDoc["time"] = currentTime;
-  combinedDoc["deviceId"] = deviceId;
-
-
-  // Copy each key-value pair from doc to dateDoc
-  for (JsonPair kv : doc.as<JsonObject>())
-  {
-    combinedDoc[kv.key()] = kv.value();
-  }
-
-  Udp.beginPacket(serverIP, serverPort);
-  ArduinoJson::serializeJson(combinedDoc, Udp); // Send the combined JSON
-  Udp.endPacket();
 
   delay(3000); // Delay for demonstration purposes
 }
