@@ -18,6 +18,10 @@ const tempHumSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  deviceId: {
+    type: Number,
+    required: true,
+  },
 });
 
 module.exports = mongoose.model("temphumlogs", tempHumSchema);

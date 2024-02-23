@@ -108,13 +108,13 @@ void sendJsonData()
 {
   // Create a JSON object
   Serial.print("P");
-  delay(500);
+  delay(800);
   if (Serial.available() > 0)
   {
     String json = Serial.readStringUntil('\r');
     delay(300);
 
-    StaticJsonDocument<200> loc;
+    StaticJsonDocument<300> loc;
 
     DeserializationError error = deserializeJson(loc, json);
     if (error)
@@ -122,7 +122,7 @@ void sendJsonData()
       return;
     }
 
-    StaticJsonDocument<200> doc;
+    StaticJsonDocument<300> doc;
     // Add data to the JSON object
     doc["processUnit"] = "ArduinoUNO";
     doc["wirelessModule"] = "ESP01S";
@@ -195,7 +195,7 @@ void loop()
     }
 
     // Create a new JSON document for the date and time
-    StaticJsonDocument<200> combinedDoc;
+    StaticJsonDocument<300> combinedDoc;
     combinedDoc["date"] = currentDate;
     combinedDoc["time"] = currentTime;
     combinedDoc["deviceId"] = deviceId;

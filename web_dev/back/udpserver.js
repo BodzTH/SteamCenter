@@ -2,6 +2,8 @@ require("dotenv").config();
 const dgram = require("dgram");
 const server = dgram.createSocket("udp4");
 const mongoose = require("mongoose");
+const fs = require("fs");
+const path = require("path");
 
 const temphumlogs = require("./models/readings");
 const devices = require("../front/models/devices");
@@ -21,6 +23,7 @@ const Model1 = connection1.model("Model1", temphumlogsSchema, "temphumlogs");
 
 // Define a model for collection 'devices' in db2
 const Model2 = connection2.model("Model2", devicesSchema, "devices");
+
 function isValidJson(str) {
   try {
     JSON.parse(str);
@@ -114,7 +117,8 @@ server.on("message", async (msg, rinfo) => {
           data.hasOwnProperty("deviceName") &&
           data.hasOwnProperty("image") &&
           data.hasOwnProperty("Latitude") &&
-          data.hasOwnProperty("Longitude")
+          data.hasOwnProperty("Longitude") &&
+          data.hasOwnProperty("Altitude")
         ) {
           resolve({ data, rinfo });
         }
@@ -134,6 +138,7 @@ server.on("message", async (msg, rinfo) => {
         image: data.image,
         latitude: data.Latitude,
         longitude: data.Longitude,
+        altitude: data.Altitude,
       });
 
       try {
@@ -152,6 +157,7 @@ server.on("message", async (msg, rinfo) => {
     data.hasOwnProperty("Temperature") &&
     data.hasOwnProperty("Latitude") &&
     data.hasOwnProperty("Longitude") &&
+    data.hasOwnProperty("Altitude") &&
     data.hasOwnProperty("date") &&
     data.hasOwnProperty("time") &&
     data.hasOwnProperty("deviceId") // Ensure deviceId is in the data
@@ -160,17 +166,44 @@ server.on("message", async (msg, rinfo) => {
     let temperature = data.Temperature;
     let Latitude = parseFloat(data.Latitude);
     let Longitude = parseFloat(data.Longitude);
-    console.log(`Received data: ${humidity}, ${temperature}, ${Latitude}, ${Longitude}`);
+    let Altitude = parseFloat(data.Altitude);
+    console.log(
+      `Received data: ${humidity}, ${temperature}, ${Latitude}, ${Longitude}`
+    );
     let date = data.date;
+    let datastr = new Date(date);
     let time = data.time;
     let deviceId = data.deviceId; // Update deviceId from the data
 
+    const folderName = `${datastr.toLocaleString("en-us", {
+      month: "short",
+    })}${datastr.getDate()}_${datastr.getFullYear().toString().substr(-2)}`;
+
+    const dirPath = path.join("/home/bodz/SteamCenter/Data", folderName);
+
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
+    let files = fs.readdirSync(dirPath);
+    let count = files.length;
+    const filePath = path.join(dirPath, `${count}.json`);
+
+    let jsonData = {
+      humidity: humidity,
+      temperature: temperature,
+      date: date,
+      time: time,
+      deviceId: deviceId,
+    };
+
+    fs.writeFileSync(filePath, JSON.stringify(jsonData, null, 2));
     // Create a new document in the 'temphumlogs' collection
     const newLog = new Model1({
       humidity: humidity,
       temperature: temperature,
       date: date,
       time: time,
+      deviceId: deviceId,
     });
 
     try {
@@ -187,7 +220,13 @@ server.on("message", async (msg, rinfo) => {
     try {
       await Model2.updateOne(
         { deviceId: deviceId },
-        { $set: { latitude: Latitude, longitude: Longitude } }
+        {
+          $set: {
+            latitude: Latitude,
+            longitude: Longitude,
+            altitude: Altitude,
+          },
+        }
       );
       console.log("Device location updated in hardwareDB database.");
     } catch (err) {

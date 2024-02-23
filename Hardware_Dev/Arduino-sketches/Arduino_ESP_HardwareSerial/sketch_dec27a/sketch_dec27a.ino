@@ -3,6 +3,9 @@
 #include <ArduinoJson.h>
 #include <TinyGPS++.h>
 #include <SoftwareSerial.h>
+#include <TMRpcm.h>
+#include <SD.h>
+#include <SPI.h>
 
 #ifndef RX_PIN
 #define RX_PIN 4 // Arduino Pin connected to the TX of the GPS module
@@ -30,6 +33,15 @@ DHT dht(DHTPIN, DHTTYPE); // Initialize DHT sensor
 TinyGPSPlus gps;                          // the TinyGPS++ object
 SoftwareSerial gpsSerial(RX_PIN, TX_PIN); // the serial interface to the GPS module
 
+TMRpcm audio;
+int file_number = 1;
+char filePrefixname[50] = "Noise";
+char exten[10] = ".wav";
+const int recordLed = 7;
+const int mic_pin = A0;
+const int sample_rate = 16000;
+#define SD_CSPin 10
+
 void gpsLocator()
 {
   if (gpsSerial.available() > 0)
@@ -49,13 +61,53 @@ void gpsLocator()
     }
   }
 }
+void wait_sec(int secs)
+{
+  int count = 0;
+  int seconds = secs;
+  while (1)
+  {
+    delay(1000);
+    count++;
+    if (count == seconds)
+    {
+      count = 0;
+      break;
+    }
+  }
+  return;
+}
+void recordAudio()
+{
+  char fileSlNum[20] = "";
+  itoa(file_number, fileSlNum, 10);
+  char file_name[50] = "";
+  strcat(file_name, filePrefixname);
+  strcat(file_name, fileSlNum);
+  strcat(file_name, exten);
+  digitalWrite(recordLed, HIGH);
+  audio.startRecording(file_name, sample_rate, mic_pin);
+  // record audio for 2mins. means , in this loop process record 2mins of audio.
+  // if you need more time duration recording audio then
+  // pass higher value into the wait_min(int mins) function.
+  wait_sec(30);
+  digitalWrite(recordLed, LOW);
+  audio.stopRecording(file_name);
+  file_number++;
+}
 
 void setup()
 {
-  Serial.begin(9600);    // Initialize serial communication
-  gpsSerial.begin(9600); // Default baud of NEO-6M GPS module is 9600
-  dht.begin();           // Start DHT sensor
-  delay(300);
+  Serial.begin(9600); // Initialize serial communication
+  // gpsSerial.begin(9600); // Default baud of NEO-6M GPS module is 9600
+  dht.begin(); // Start DHT sensor
+  // pinMode(mic_pin, INPUT);
+  // pinMode(recordLed, OUTPUT);
+  // while (!SD.begin(SD_CSPin))
+  // {
+  //   delay(500);
+  // }
+  // audio.CSPin = SD_CSPin;
 }
 
 void loop()
@@ -68,6 +120,7 @@ void loop()
     {
 
       // gpsLocator(); // Get GPS location
+      //
       // Run DHT11 sensor project
       float humidity = dht.readHumidity();
       float temperature = dht.readTemperature();
@@ -80,6 +133,7 @@ void loop()
       doc["Temperature"] = temperature;
       doc["Latitude"] = lat;
       doc["Longitude"] = lng;
+      doc["Altitude"] = alt;
 
       // Print the JSON object
       serializeJson(doc, Serial);
@@ -107,9 +161,11 @@ void loop()
     else if (command == 'P')
     {
       // gpsLocator(); // Get GPS location
-      StaticJsonDocument<200> loc;
+      // recordAudio(); // Record audio
+      StaticJsonDocument<300> loc;
       loc["Latitude"] = lat;
       loc["Longitude"] = lng;
+      loc["Altitude"] = alt;
       serializeJson(loc, Serial);
       Serial.println();
     }

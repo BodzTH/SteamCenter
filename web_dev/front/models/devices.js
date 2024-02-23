@@ -34,6 +34,10 @@ const deviceSchema = new mongoose.Schema({
     type: Schema.Types.Decimal128,
     required: true,
   },
+  altitude: {
+    type: Schema.Types.Decimal128,
+    required: true,
+  },
 });
 
 module.exports = mongoose.model("devices", deviceSchema);
