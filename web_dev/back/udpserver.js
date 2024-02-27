@@ -148,27 +148,20 @@ server.on("message", async (msg, rinfo) => {
   }
   // Check if the JSON object has Humidity, Temperature, Latitude, Longitude, date, and time properties
   else if (
-    data.hasOwnProperty("Humidity") &&
-    data.hasOwnProperty("Temperature") &&
     data.hasOwnProperty("Latitude") &&
     data.hasOwnProperty("Longitude") &&
     data.hasOwnProperty("date") &&
     data.hasOwnProperty("time") &&
     data.hasOwnProperty("deviceId") // Ensure deviceId is in the data
   ) {
-    let humidity = data.Humidity;
-    let temperature = data.Temperature;
     let Latitude = parseFloat(data.Latitude);
     let Longitude = parseFloat(data.Longitude);
-    console.log(`Received data: ${humidity}, ${temperature}, ${Latitude}, ${Longitude}`);
     let date = data.date;
     let time = data.time;
     let deviceId = data.deviceId; // Update deviceId from the data
 
     // Create a new document in the 'temphumlogs' collection
     const newLog = new Model1({
-      humidity: humidity,
-      temperature: temperature,
       date: date,
       time: time,
     });

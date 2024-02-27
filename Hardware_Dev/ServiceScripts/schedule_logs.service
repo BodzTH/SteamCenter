@@ -1,8 +1,0 @@
-[Unit]
-Description=Schedule Logs TempHum Readings
-
-[Service]
-ExecStart=templogs.sh
-
-[Install]
-WantedBy=multi-user.target
