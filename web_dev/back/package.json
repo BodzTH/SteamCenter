@@ -9,7 +9,7 @@
   },
   "scripts": {
     "start": "node server.js",
-    "dev1": "nodemon httpserver.js",
+    "dev1": "nodemon multiServer.js",
     "dev2": "nodemon udpserver.js",
     "dev3": "nodemon aiudpserver.js"
   },

@@ -41,8 +41,12 @@
 #define SERVER_IP4 16
 #endif
 
-#ifndef SERVER_PORT
-#define SERVER_PORT 5040
+#ifndef SERVER_PORT1
+#define SERVER_PORT1 5040
+#endif
+
+#ifndef SERVER_PORT2
+#define SERVER_PORT2 5030
 #endif
 
 #ifndef RX_PIN
@@ -59,7 +63,8 @@
 // Global variable declaration
 const int deviceId = DEVICE_ID;
 IPAddress serverIP(SERVER_IP1, SERVER_IP2, SERVER_IP3, SERVER_IP4);
-unsigned int serverPort = SERVER_PORT;
+unsigned int serverPort = SERVER_PORT1;
+unsigned int serverPortTCP = SERVER_PORT2;
 String lng = "0";
 String lat = "0";
 String alt = "0";
@@ -211,9 +216,9 @@ void sendJsonData() {
   // Create a JSON object
   StaticJsonDocument<200> doc;
   // Add data to the JSON object
-  doc["processUnit"] = "ArduinoUNO";
-  doc["wirelessModule"] = "ESP01S";
-  doc["micModule"] = "MAX4466";
+  doc["processUnit"] = "ESP01S";
+  doc["wirelessModule"] = "WEMOS D1 R32";
+  doc["micModule"] = "MAX9814";
   doc["coverage"] = 100;
   doc["deviceName"] = "Delta1";
   doc["deviceId"] = deviceId;
@@ -288,11 +293,11 @@ void startRecording() {
   // Increment the file number for the next recording
   file_number++;
 
-  sendFileOverTCP(file_name);
   sendJsonOverUDP(file_name);
+  sendFileOverTCP(file_name);
 }
 
-void sendJsonOverUDP(const char* filename) {
+void sendJsonOverUDP(String filename) {
   StaticJsonDocument<200> doc;
 
   // Add data to the JSON object
@@ -301,16 +306,17 @@ void sendJsonOverUDP(const char* filename) {
   doc["date"] = currentDate;
   doc["time"] = currentTime;
   doc["deviceId"] = deviceId;
-  doc["fileName"] = filename;
+  doc["filename"] = filename;
   // Create a JSON object
 
   Udp.beginPacket(serverIP, serverPort);
   ArduinoJson::serializeJson(doc, Udp);  // Send the combined JSON
   Udp.endPacket();
+  Serial.println("UDP sent");
 }
 
 void sendFileOverTCP(const char* filename) {
-  if (!client.connect(serverIP, serverPort)) {
+  if (!client.connect(serverIP, serverPortTCP)) {
     Serial.println("Connection failed");
     return;
   }

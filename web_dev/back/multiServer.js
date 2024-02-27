@@ -40,6 +40,74 @@ function isValidJson(str) {
   }
 }
 
+function receiveFile(serverIp, serverPort, directoryPath, fileName) {
+  const server = net.createServer((socket) => {
+    console.log(
+      `Accepted connection from ${socket.remoteAddress}:${socket.remotePort}`
+    );
+
+    // Ensure the directory exists
+    fs.mkdirSync(directoryPath, { recursive: true });
+
+    // Use the path module to join the directory path and the filename
+    const outputPath = path.join(directoryPath, fileName);
+    const fileStream = fs.createWriteStream(outputPath);
+
+    console.log(`Saving file to ${outputPath}`);
+    socket.on("data", (data) => {
+      fileStream.write(data);
+    });
+
+    socket.on("end", () => {
+      console.log("File received and saved.");
+      fileStream.end();
+    });
+
+    socket.on("error", (err) => {
+      console.error(`Connection error: ${err}`);
+      fileStream.end();
+    });
+  });
+
+  server.listen(serverPort, serverIp, () => {
+    console.log(`TCP Server listening on ${serverIp}:${serverPort}`);
+  });
+
+  server.on("error", (err) => {
+    console.error(`Server error: ${err}`);
+  });
+}
+
+function createFileInDateDirectory(fileName, dateString) {
+  // Parse the date string
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1; // getMonth() returns 0-11
+  const day = date.getDate();
+
+  // Construct the directory path
+  const directoryPath = path.join(
+    "home/bodz/2024_Noise_Recordings",
+    year.toString(),
+    month.toString(),
+    day.toString()
+  );
+
+  // Ensure the directory exists
+  fs.mkdirSync(directoryPath, { recursive: true });
+
+  // Define the full path for the new file
+  const filePath = path.join(directoryPath, fileName);
+
+  // Create a placeholder file in the specified directory
+  fs.writeFileSync(filePath, ""); // Initially, the file is empty
+
+  console.log(`File '${fileName}' created at '${filePath}'`);
+
+  // Return the full path of the created file
+  return filePath;
+}
+
 server.on("message", async (msg, rinfo) => {
   console.log(`Server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
 
@@ -155,22 +223,25 @@ server.on("message", async (msg, rinfo) => {
     } catch (err) {
       console.error(`Error waiting for message: ${err.message}`);
     }
-  }
-  // Check if the JSON object has Humidity, Temperature, Latitude, Longitude, date, and time properties
-  else if (
+  } else if (
     data.hasOwnProperty("Latitude") &&
     data.hasOwnProperty("Longitude") &&
     data.hasOwnProperty("date") &&
     data.hasOwnProperty("time") &&
-    data.hasOwnProperty("deviceId") // Ensure deviceId is in the data
+    data.hasOwnProperty("deviceId") &&
+    data.hasOwnProperty("filename")
   ) {
     let Latitude = parseFloat(data.Latitude);
     let Longitude = parseFloat(data.Longitude);
     let date = data.date;
     let time = data.time;
-    let deviceId = data.deviceId; // Update deviceId from the data
+    let deviceId = data.deviceId;
+    let fileName = String(data.filename);
 
-    // Create a new document in the 'temphumlogs' collection
+    // const fullPath = createFileInDateDirectory(fileName, date);
+
+    receiveFile(IP, TCP_PORT, "home/bodz/2024_Noise_Recordings", fileName);
+
     const newLog = new Model1({
       date: date,
       time: time,
