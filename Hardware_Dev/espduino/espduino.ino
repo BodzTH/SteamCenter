@@ -49,16 +49,12 @@
 #define SERVER_PORT2 5030
 #endif
 
-#ifndef RX_PIN
-#define RX_PIN 4  // Arduino Pin connected to the TX of the GPS module
-#endif
-
-#ifndef TX_PIN
-#define TX_PIN 3  // Arduino Pin connected to the RX of the GPS module
-#endif
-
 #ifndef I2S_MODE I2S_MODE_ADC_BUILT_IN
 #define I2S_MODE I2S_MODE_ADC_BUILT_IN
+#endif
+
+#ifndef GPS_BAUDRATE
+#define GPS_BAUDRATE 9600  // The default baudrate of NEO-6M is 9600
 #endif
 // Global variable declaration
 const int deviceId = DEVICE_ID;
@@ -74,8 +70,6 @@ String currentTime;
 StaticJsonDocument<100> checkId;
 char packetBuffer[255];
 
-// the TinyGPS++ object
-SoftwareSerial gpsSerial(RX_PIN, TX_PIN);  // the serial interface to the GPS module
 WiFiUDP Udp;
 WiFiUDP ntpUDP;
 TinyGPSPlus gps;                                                // UDP client for NTP
@@ -93,8 +87,8 @@ const int record_time = 10;  // second
 int file_number = 1;
 char filePrefixname[50] = "Noise";
 char exten[10] = ".wav";
-const int recordLed = 25;
-const int TCPLed = 1;
+const int recordLed = 26;
+const int TCPLed = 25;
 const int mic_pin = A0;
 
 const int headerSize = 44;
@@ -107,7 +101,7 @@ char partWavData[numPartWavData];
 
 void setup() {
   Serial.begin(115200);
-  gpsSerial.begin(9600);  // Default baud of NEO-6M GPS module is 9600
+  Serial2.begin(GPS_BAUDRATE);  // Default baud of NEO-6M GPS module is 9600
   connectToWiFi();
   startUDPandNTP();
   prepareData();
@@ -121,15 +115,15 @@ void setup() {
   initializeSDCard(CS_PIN);  // Call the function with the CS pin number, for example, 10
   // Initialize the I2S interface for recording
   I2S_Init(I2S_MODE, I2S_BITS_PER_SAMPLE_32BIT);
+  pinMode(recordLed, OUTPUT);
+  pinMode(TCPLed, OUTPUT);
 }
 
 
 
 void loop() {
-
-
   startRecording();
-  delay(4000);  // Wait for 4 seconds
+  delay(5000);
 }
 
 // Define the I2S pin configuration here as well based on your ESP32 board
@@ -165,19 +159,34 @@ void startUDPandNTP() {
 }
 
 void gpsLocator() {
-  if (gpsSerial.available() > 0) {
-    if (gps.encode(gpsSerial.read())) {
-      if (gps.location.isValid()) {
-        lat = String(gps.location.lat(), 10);  // 6 is the number of decimals you want
-        lng = String(gps.location.lng(), 10);  // 6 is the number of decimals you want
-      }
+  // Check if there is data available from the GPS module
+  if (Serial2.available() > 0) {
+    Serial.println("Data available from GPS");
 
-      if (gps.altitude.isValid()) {
-        alt = String(gps.altitude.meters());
+    // Attempt to decode a GPS message
+    if (gps.encode(Serial2.read())) {
+      Serial.println("GPS data encoded successfully");
+
+      // Check if the location data is valid
+      if (gps.location.isValid()) {
+        // Convert latitude and longitude to String with 6 decimal places
+        lat = String(gps.location.lat(), 6);  // Adjusted to 6 as per the original comment
+        lng = String(gps.location.lng(), 6);  // Adjusted to 6 as per the original comment
+        Serial.print("Latitude: ");
+        Serial.println(lat);
+        Serial.print("Longitude: ");
+        Serial.println(lng);
+      } else {
+        Serial.println("Invalid location data");
       }
+    } else {
+      Serial.println("Failed to encode GPS data");
     }
+  } else {
+    Serial.println("No data available from GPS");
   }
 }
+
 
 bool checkDeviceId() {
   int packetSize = 0;
@@ -216,7 +225,7 @@ void sendJsonData() {
   // Create a JSON object
   StaticJsonDocument<200> doc;
   // Add data to the JSON object
-  doc["processUnit"] = "ESP01S";
+  doc["processUnit"] = "ESP32";
   doc["wirelessModule"] = "WEMOS D1 R32";
   doc["micModule"] = "MAX9814";
   doc["coverage"] = 100;
@@ -269,6 +278,7 @@ void startRecording() {
   // Write the WAV header to the file
   file.write(header, headerSize);
   prepareData();
+  sendJsonOverUDP(file_name);
   digitalWrite(recordLed, HIGH);
   // Read and write the audio data in chunks
   for (int j = 0; j < waveDataSize / numPartWavData; ++j) {
@@ -290,14 +300,13 @@ void startRecording() {
   digitalWrite(recordLed, LOW);
   Serial.println("Recording stopped");
 
+
+  sendFileOverTCP(file_name);
   // Increment the file number for the next recording
   file_number++;
-
-  sendJsonOverUDP(file_name);
-  sendFileOverTCP(file_name);
 }
 
-void sendJsonOverUDP(String filename) {
+void sendJsonOverUDP(const char* filename) {
   StaticJsonDocument<200> doc;
 
   // Add data to the JSON object

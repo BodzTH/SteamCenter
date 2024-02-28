@@ -41,71 +41,77 @@ function isValidJson(str) {
 }
 
 function receiveFile(serverIp, serverPort, directoryPath, fileName) {
-  const server = net.createServer((socket) => {
-    console.log(
-      `Accepted connection from ${socket.remoteAddress}:${socket.remotePort}`
-    );
+  return new Promise((resolve, reject) => {
+    const server = net.createServer((socket) => {
+      console.log(
+        `Accepted connection from ${socket.remoteAddress}:${socket.remotePort}`
+      );
 
-    // Ensure the directory exists
-    fs.mkdirSync(directoryPath, { recursive: true });
+      // Ensure the directory exists
+      fs.mkdirSync(directoryPath, { recursive: true });
 
-    // Use the path module to join the directory path and the filename
-    const outputPath = path.join(directoryPath, fileName);
-    const fileStream = fs.createWriteStream(outputPath);
+      // Use the path module to join the directory path and the filename
+      const outputPath = path.join(directoryPath, fileName);
+      const fileStream = fs.createWriteStream(outputPath);
 
-    console.log(`Saving file to ${outputPath}`);
-    socket.on("data", (data) => {
-      fileStream.write(data);
+      console.log(`Saving file to ${outputPath}`);
+      socket.on("data", (data) => {
+        fileStream.write(data);
+      });
+
+      socket.on("end", () => {
+        console.log("File received and saved.");
+        fileStream.end();
+        server.close();
+        resolve(outputPath); // Resolve the Promise with the outputPath
+      });
+
+      socket.on("error", (err) => {
+        console.error(`Connection error: ${err}`);
+        fileStream.end();
+        server.close();
+        reject(err); // Reject the Promise with the error
+      });
     });
 
-    socket.on("end", () => {
-      console.log("File received and saved.");
-      fileStream.end();
+    server.listen(serverPort, serverIp, () => {
+      console.log(`TCP Server listening on ${serverIp}:${serverPort}`);
     });
 
-    socket.on("error", (err) => {
-      console.error(`Connection error: ${err}`);
-      fileStream.end();
+    server.on("error", (err) => {
+      console.error(`Server error: ${err}`);
+      reject(err); // Reject the Promise with the error
     });
-  });
-
-  server.listen(serverPort, serverIp, () => {
-    console.log(`TCP Server listening on ${serverIp}:${serverPort}`);
-  });
-
-  server.on("error", (err) => {
-    console.error(`Server error: ${err}`);
   });
 }
 
-function createFileInDateDirectory(fileName, dateString) {
+function createDirectoryInDateDirectory(directoryName, dateString) {
   // Parse the date string
   const date = new Date(dateString);
   const year = date.getFullYear();
-  const month = date.getMonth() + 1; // getMonth() returns 0-11
+  const month = date.toLocaleString("default", { month: "long" }); // Full month name
   const day = date.getDate();
 
+  // Format day and year for the directory name
+  const monthShort = date.toLocaleString("default", { month: "short" }); // Short month name
+  const dayYearFolderName = `${monthShort}${day}_${year.toString().slice(-2)}`; // e.g., Feb25_24
+
   // Construct the directory path
-  const directoryPath = path.join(
-    "home/bodz/2024_Noise_Recordings",
-    year.toString(),
-    month.toString(),
-    day.toString()
+  const directoryPath = path.resolve(
+    "/home/bodz/SteamCenter/",
+    "2024_Noise_Recordings",
+    month, // Use the full month name
+    dayYearFolderName, // Use the formatted day and year name
+    directoryName // Add the directoryName to the path
   );
 
   // Ensure the directory exists
   fs.mkdirSync(directoryPath, { recursive: true });
 
-  // Define the full path for the new file
-  const filePath = path.join(directoryPath, fileName);
+  console.log(`Directory '${directoryName}' created at '${directoryPath}'`);
 
-  // Create a placeholder file in the specified directory
-  fs.writeFileSync(filePath, ""); // Initially, the file is empty
-
-  console.log(`File '${fileName}' created at '${filePath}'`);
-
-  // Return the full path of the created file
-  return filePath;
+  // Return the full path of the created directory
+  return directoryPath;
 }
 
 server.on("message", async (msg, rinfo) => {
@@ -236,27 +242,44 @@ server.on("message", async (msg, rinfo) => {
     let date = data.date;
     let time = data.time;
     let deviceId = data.deviceId;
-    let fileName = String(data.filename);
-
-    // const fullPath = createFileInDateDirectory(fileName, date);
-
-    receiveFile(IP, TCP_PORT, "home/bodz/2024_Noise_Recordings", fileName);
-
-    const newLog = new Model1({
-      date: date,
-      time: time,
-    });
-
-    try {
-      // Save the new document to the database
-      await newLog.save();
-      // createDirectoriesAndSaveFiles(data);
-      console.log("New log saved to TempLogs database.");
-    } catch (err) {
-      console.error(
-        `Error saving new log to TempLogs database: ${err.message}`
-      );
+    let folderName = data.filename;
+    let fileName = data.filename;
+    // Remove the leading slash
+    if (folderName.startsWith("/")) {
+      folderName = folderName.slice(1);
     }
+
+    // Remove the .wav extension
+    folderName = folderName.replace(".wav", "");
+
+    console.log(folderName); // Outputs: Noise1
+    const folderPath = createDirectoryInDateDirectory(folderName, date);
+
+    async function handleFileReception(IP, TCP_PORT, folderPath, fileName) {
+      try {
+        const outputPath = await receiveFile(
+          IP,
+          TCP_PORT,
+          folderPath,
+          fileName
+        );
+        console.log(outputPath);
+
+        // Assuming date and time are defined elsewhere in your code
+        const newLog = new Model1({
+          date: date,
+          time: time,
+          filepath: outputPath,
+        });
+
+        // Save the new document to the database
+        await newLog.save();
+        console.log("New log saved to TempLogs database.");
+      } catch (err) {
+        console.error(`An error occurred: ${err}`);
+      }
+    }
+    handleFileReception(IP, TCP_PORT, folderPath, fileName);
 
     // Update the 'devices' document with deviceId 1
     try {
@@ -276,6 +299,7 @@ server.on("message", async (msg, rinfo) => {
 connection1
   .on("connected", () => {
     console.log("Connected to TempLogs database.");
+    console.log(__dirname);
   })
   .on("error", (err) => {
     console.error("Error occurred in MongoDB connection to TempLogs: ", err);
