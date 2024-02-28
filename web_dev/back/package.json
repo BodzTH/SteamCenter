@@ -11,7 +11,7 @@
     "start": "node server.js",
     "dev1": "nodemon multiServer.js",
     "dev2": "nodemon udpserver.js",
-    "dev3": "nodemon aiudpserver.js"
+    "dev3": "nodemon httpserver.js"
   },
   "name": "back",
   "version": "1.0.0",

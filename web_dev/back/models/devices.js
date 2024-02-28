@@ -22,16 +22,12 @@ const deviceSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  coverage: {
+  latitude: {
     type: Number,
     required: true,
   },
-  latitude: {
-    type: Schema.Types.Decimal128,
-    required: true,
-  },
   longitude: {
-    type: Schema.Types.Decimal128,
+    type: Number,
     required: true,
   },
 });

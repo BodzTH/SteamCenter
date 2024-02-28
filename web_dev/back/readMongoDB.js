@@ -1,14 +1,11 @@
 const mongoose = require("mongoose");
 
-const temphumlogs = require("../back/models/readings");
+// If you convert readings.js and devices.ts to use ES Module syntax
+const temphumlogs = require("./models/readings");
 const devices = require("./models/devices");
 
-const connection1 = mongoose.createConnection(
-  "mongodb://localhost:27017/TempLogs"
-);
-const connection2 = mongoose.createConnection(
-  "mongodb://localhost:27017/hardwareDB"
-);
+const connection1 = mongoose.createConnection(process.env.TEMPLOGS_DB_URI);
+const connection2 = mongoose.createConnection(process.env.HARDWAREDB_DB_URI);
 
 const temphumlogsSchema = temphumlogs.schema;
 const devicesSchema = devices.schema;
@@ -35,18 +32,4 @@ connection2.on("error", (err) => {
   console.error("Error occurred in MongoDB connection2: ", err);
 });
 
-async function fetchAllDocs() {
-  try {
-    // Query all documents from 'temphumlogs' collection in db1
-    const docs1 = await Model1.find({});
-    console.log("Data from db1: ", docs1);
 
-    // Query all documents from 'devices' collection in db2
-    const docs2 = await Model2.find({});
-    console.log("Data from db2: ", docs2);
-  } catch (err) {
-    console.error("Error occurred while querying databases: ", err);
-  }
-}
-
-//fetchAllDocs();

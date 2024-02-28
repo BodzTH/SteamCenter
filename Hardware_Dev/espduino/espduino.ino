@@ -228,7 +228,6 @@ void sendJsonData() {
   doc["processUnit"] = "ESP32";
   doc["wirelessModule"] = "WEMOS D1 R32";
   doc["micModule"] = "MAX9814";
-  doc["coverage"] = 100;
   doc["deviceName"] = "Delta1";
   doc["deviceId"] = deviceId;
   doc["image"] = "/home/bodz/SteamCenter/web_dev/database/device1.jpeg";

@@ -2,6 +2,7 @@
 import Device from "@/components/Device";
 import Search from "@/components/Search";
 
+
 function Home() {
 
   return (
@@ -21,6 +22,7 @@ function Home() {
           <Device />
         }
       </div>
+
     </main >
   )
 

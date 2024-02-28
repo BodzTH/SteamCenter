@@ -49,7 +49,7 @@ const Device = React.memo(() => {
                 <div className='flex gap-10'>
 
 
-                    <Map />
+                    <Map deviceID={1} />
 
 
                     <div>

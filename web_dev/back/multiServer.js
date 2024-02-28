@@ -16,16 +16,12 @@ server.bind({
 });
 
 // Database connections
-const connection1 = mongoose.createConnection(
-  "mongodb://localhost:27017/TempLogs"
-);
-const connection2 = mongoose.createConnection(
-  "mongodb://localhost:27017/hardwareDB"
-);
+const connection1 = mongoose.createConnection(process.env.TEMPLOGS_DB_URI);
+const connection2 = mongoose.createConnection(process.env.HARDWAREDB_DB_URI);
 
 // Model imports
-const temphumlogs = require("./models/readings");
-const devices = require("../front/models/devices");
+const temphumlogs = require("./models/readings.js");
+const devices = require("../front/models/devices.ts");
 
 // Models setup
 const Model1 = connection1.model("Model1", temphumlogs.schema, "temphumlogs");

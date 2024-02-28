@@ -1,38 +1,57 @@
 require("dotenv").config();
 const express = require("express");
 const app = express();
+const cors = require("cors");
 const mongoose = require("mongoose");
+
+app.use(express.json()); // For parsing application/json
+app.use(cors());
+
+// If you convert readings.js and devices.ts to use ES Module syntax
 const temphumlogs = require("./models/readings");
+const devices = require("./models/devices");
 
-app.use(express.json());
+const connection1 = mongoose.createConnection(process.env.TEMPLOGS_DB_URI);
+const connection2 = mongoose.createConnection(process.env.HARDWAREDB_DB_URI);
 
-app.post("/temphum", async (req, res) => {
-  const { temp, humidity, date } = req.body;
+const temphumlogsSchema = temphumlogs.schema;
+const devicesSchema = devices.schema;
+
+// Define a model for collection 'temphumlogs' in db1
+const Model1 = connection1.model("Model1", temphumlogsSchema, "temphumlogs");
+
+// Define a model for collection 'devices' in db2
+const Model2 = connection2.model("Model2", devicesSchema, "devices");
+
+connection1.on("connected", () => {
+  console.log("Connected to TempLogs");
+});
+
+connection1.on("error", (err) => {
+  console.error("Error occurred in MongoDB connection1: ", err);
+});
+
+connection2.on("connected", () => {
+  console.log("Connected to hardwareDB");
+});
+
+connection2.on("error", (err) => {
+  console.error("Error occurred in MongoDB connection2: ", err);
+});
+
+app.get("/location/:id", async (req, res) => {
+  console.log("Handler reached", req.params.id); // Check if the handler is reached
   try {
-    const newTempHum = await temphumlogs.create({
-      temp,
-      humidity,
-      date,
-    });
-    res.status(200).json(newTempHum);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
+    const device = await Model2.findOne({ deviceId: req.params.id });
+    console.log(device);
+    res.json(device);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
-app.get("/nextThum", (req, res) => {
-  // res.json(temphum);
-  res.json(temps);
-  console.log(temps);
+const port = process.env.PORTHTTP; // Set the port number
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });
-
-mongoose
-  .connect("mongodb://localhost:27017/temp")
-  .then(() => {
-    const IP = process.env.IP1; // replace with your desired IP
-    const PORT = process.env.PORTHTTP; // replace with your desired HTTP port number
-    app.listen(PORT, IP, () => {
-      console.log(`Connected to DB & HTTP server is running on ${IP}:${PORT}`);
-    });
-  })
-  .catch((err) => console.log(err));
