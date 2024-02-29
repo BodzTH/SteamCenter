@@ -16,25 +16,16 @@ server.bind({
 });
 
 // Database connections
-const connection1 = mongoose.createConnection(process.env.TEMPLOGS_DB_URI);
+const connection1 = mongoose.createConnection(process.env.NOISEDOCS_DB_URI);
 const connection2 = mongoose.createConnection(process.env.HARDWAREDB_DB_URI);
 
 // Model imports
-const temphumlogs = require("./models/readings.js");
-const devices = require("../front/models/devices.ts");
+const noiseData = require("./models/readings");
+const devices = require("./models/devices");
 
 // Models setup
-const Model1 = connection1.model("Model1", temphumlogs.schema, "temphumlogs");
+const Model1 = connection1.model("Model1", noiseData.schema, "noiseData");
 const Model2 = connection2.model("Model2", devices.schema, "devices");
-
-function isValidJson(str) {
-  try {
-    JSON.parse(str);
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
 
 function receiveFile(serverIp, serverPort, directoryPath, fileName) {
   return new Promise((resolve, reject) => {
@@ -113,12 +104,8 @@ function createDirectoryInDateDirectory(directoryName, dateString) {
 server.on("message", async (msg, rinfo) => {
   console.log(`Server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
 
-  if (!isValidJson(msg)) {
-    console.error(`Received message is not valid JSON: ${msg}`);
-    return;
-  }
-
   let data;
+
   try {
     data = JSON.parse(msg);
   } catch (err) {
@@ -143,68 +130,28 @@ server.on("message", async (msg, rinfo) => {
       return;
     }
 
-    let response;
-    if (device) {
-      response = "OK";
-    } else {
-      response = "NO";
-    }
+    let response = device ? "OK" : "NO";
 
-    // Wrap server.send in a Promise
-    const sendResponse = new Promise((resolve, reject) => {
-      server.send(response, rinfo.port, rinfo.address, (err) => {
-        if (err) {
-          console.error(`Error sending response: ${err.message}`);
-          reject(err);
-        } else {
-          console.log(`Sent response: ${response}`);
-          resolve();
-        }
-      });
+    server.send(response, rinfo.port, rinfo.address, (err) => {
+      if (err) {
+        console.error(`Error sending response: ${err.message}`);
+      } else {
+        console.log(`Sent response: ${response}`);
+      }
     });
-
+  } else if (
+    data.hasOwnProperty("deviceId") &&
+    data.hasOwnProperty("deviceName") &&
+    data.hasOwnProperty("processUnit") &&
+    data.hasOwnProperty("wirelessModule") &&
+    data.hasOwnProperty("micModule") &&
+    data.hasOwnProperty("image") &&
+    data.hasOwnProperty("Latitude") &&
+    data.hasOwnProperty("Longitude") &&
+    data.hasOwnProperty("Altitude")
+  ) {
     try {
-      // Wait for the response to be sent before proceeding
-      await sendResponse;
-    } catch (err) {
-      console.error(`Error sending response: ${err.message}`);
-      return;
-    }
-
-    // Wrap server.on("message") in a Promise
-    const waitForMessage = new Promise((resolve) => {
-      server.on("message", (msg, rinfo) => {
-        if (!isValidJson(msg)) {
-          console.error(`Received message is not valid JSON: ${msg}`);
-          return;
-        }
-        let data;
-        try {
-          data = JSON.parse(msg);
-        } catch (err) {
-          console.error(`Error parsing message: ${err.message}`);
-          return;
-        }
-
-        if (
-          data.hasOwnProperty("processUnit") &&
-          data.hasOwnProperty("wirelessModule") &&
-          data.hasOwnProperty("micModule") &&
-          data.hasOwnProperty("coverage") &&
-          data.hasOwnProperty("deviceName") &&
-          data.hasOwnProperty("image") &&
-          data.hasOwnProperty("Latitude") &&
-          data.hasOwnProperty("Longitude")
-        ) {
-          resolve({ data, rinfo });
-        }
-      });
-    });
-
-    try {
-      const { data } = await waitForMessage;
-
-      let newDevice = new Model2({
+      let newDevice = await Model2.create({
         processUnit: data.processUnit,
         wirelessModule: data.wirelessModule,
         micModule: data.micModule,
@@ -212,22 +159,19 @@ server.on("message", async (msg, rinfo) => {
         deviceName: data.deviceName,
         deviceId: data.deviceId,
         image: data.image,
-        latitude: data.Latitude,
-        longitude: data.Longitude,
+        latitude: parseFloat(data.Latitude),
+        longitude: parseFloat(data.Longitude),
+        altitude: parseFloat(data.Altitude),
       });
 
-      try {
-        await newDevice.save();
-        console.log(`Saved new device: ${JSON.stringify(newDevice)}`);
-      } catch (err) {
-        console.error(`Error saving new device: ${err.message}`);
-      }
+      console.log(`New device created: ${JSON.stringify(newDevice)}`);
     } catch (err) {
-      console.error(`Error waiting for message: ${err.message}`);
+      console.error(`Error creating new device: ${err.message}`);
     }
   } else if (
     data.hasOwnProperty("Latitude") &&
     data.hasOwnProperty("Longitude") &&
+    data.hasOwnProperty("Altitude") &&
     data.hasOwnProperty("date") &&
     data.hasOwnProperty("time") &&
     data.hasOwnProperty("deviceId") &&
@@ -235,6 +179,7 @@ server.on("message", async (msg, rinfo) => {
   ) {
     let Latitude = parseFloat(data.Latitude);
     let Longitude = parseFloat(data.Longitude);
+    let Altitude = parseFloat(data.Altitude);
     let date = data.date;
     let time = data.time;
     let deviceId = data.deviceId;
@@ -281,7 +226,13 @@ server.on("message", async (msg, rinfo) => {
     try {
       await Model2.updateOne(
         { deviceId: deviceId },
-        { $set: { latitude: Latitude, longitude: Longitude } }
+        {
+          $set: {
+            latitude: Latitude,
+            longitude: Longitude,
+            altitude: Altitude,
+          },
+        }
       );
       console.log("Device location updated in hardwareDB database.");
     } catch (err) {
@@ -295,7 +246,6 @@ server.on("message", async (msg, rinfo) => {
 connection1
   .on("connected", () => {
     console.log("Connected to TempLogs database.");
-    console.log(__dirname);
   })
   .on("error", (err) => {
     console.error("Error occurred in MongoDB connection to TempLogs: ", err);

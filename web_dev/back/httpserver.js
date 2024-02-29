@@ -46,7 +46,7 @@ app.get("/location/:id", async (req, res) => {
     console.log(device);
     res.json(device);
   } catch (error) {
-    console.error(error);
+    console.error(error); 
     res.status(500).json({ error: "Internal Server Error" });
   }
 });

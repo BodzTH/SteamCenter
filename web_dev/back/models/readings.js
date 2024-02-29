@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
-const { Schema } = mongoose;
 
-const tempHumSchema = new mongoose.Schema({
+const noiseDataSchema = new mongoose.Schema({
   date: {
     type: String,
     required: true,
@@ -16,4 +15,4 @@ const tempHumSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model("temphumlogs", tempHumSchema);
+module.exports = mongoose.model("NoiseData", noiseDataSchema);

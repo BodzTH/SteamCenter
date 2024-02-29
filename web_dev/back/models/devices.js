@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const { Schema } = mongoose;
 
 const deviceSchema = new mongoose.Schema({
   deviceName: {
@@ -27,6 +26,10 @@ const deviceSchema = new mongoose.Schema({
     required: true,
   },
   longitude: {
+    type: Number,
+    required: true,
+  },
+  altitude: {
     type: Number,
     required: true,
   },
