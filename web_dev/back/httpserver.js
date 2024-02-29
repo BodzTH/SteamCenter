@@ -7,21 +7,17 @@ const mongoose = require("mongoose");
 app.use(express.json()); // For parsing application/json
 app.use(cors());
 
-// If you convert readings.js and devices.ts to use ES Module syntax
-const temphumlogs = require("./models/readings");
-const devices = require("./models/devices");
-
-const connection1 = mongoose.createConnection(process.env.TEMPLOGS_DB_URI);
+// Database connections
+const connection1 = mongoose.createConnection(process.env.NOISEDOCS_DB_URI);
 const connection2 = mongoose.createConnection(process.env.HARDWAREDB_DB_URI);
 
-const temphumlogsSchema = temphumlogs.schema;
-const devicesSchema = devices.schema;
+// Model imports
+const noiseData = require("./models/readings");
+const devices = require("./models/devices");
 
-// Define a model for collection 'temphumlogs' in db1
-const Model1 = connection1.model("Model1", temphumlogsSchema, "temphumlogs");
-
-// Define a model for collection 'devices' in db2
-const Model2 = connection2.model("Model2", devicesSchema, "devices");
+// Models setup
+const Model1 = connection1.model("Model1", noiseData.schema, "noiseData");
+const Model2 = connection2.model("Model2", devices.schema, "devices");
 
 connection1.on("connected", () => {
   console.log("Connected to TempLogs");
@@ -46,7 +42,7 @@ app.get("/location/:id", async (req, res) => {
     console.log(device);
     res.json(device);
   } catch (error) {
-    console.error(error); 
+    console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
