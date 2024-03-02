@@ -46,6 +46,18 @@ app.get("/location/:id", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+app.get("/device/:id", async (req, res) => {
+  try {
+    const device = await Model2.findOne({ deviceId: req.params.id });
+    if (!device) {
+      return res.status(404).json({ error: "Device not found" });
+    }
+    res.json(device);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
 const port = process.env.PORTHTTP; // Set the port number
 app.listen(port, () => {

@@ -1,6 +1,10 @@
 const mongoose = require("mongoose");
 
 const noiseDataSchema = new mongoose.Schema({
+  deviceId: {
+    type: String,
+    required: true,
+  },
   date: {
     type: String,
     required: true,

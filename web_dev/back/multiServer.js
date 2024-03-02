@@ -208,6 +208,7 @@ server.on("message", async (msg, rinfo) => {
 
         // Assuming date and time are defined elsewhere in your code
         const newLog = new Model1({
+          deviceId: deviceId,
           date: date,
           time: time,
           filepath: outputPath,

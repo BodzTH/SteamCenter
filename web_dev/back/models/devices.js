@@ -33,6 +33,6 @@ const deviceSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-});
+}, { toJSON: { getters: true }, toObject: { getters: true } });
 
 module.exports = mongoose.model("devices", deviceSchema);
