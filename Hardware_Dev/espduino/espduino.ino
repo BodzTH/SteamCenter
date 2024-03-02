@@ -11,11 +11,11 @@
 #include <SoftwareSerial.h>
 
 #ifndef STASSID
-#define STASSID "#_#"
+#define STASSID "AIO"
 #endif
 
 #ifndef STAPSK
-#define STAPSK "MKnuby@ggezpz55"
+#define STAPSK "AIO@AIU2024"
 #endif
 
 #ifndef DEVICE_ID
@@ -35,7 +35,7 @@
 #endif
 
 #ifndef SERVER_IP4
-#define SERVER_IP4 16
+#define SERVER_IP4 101
 #endif
 
 #ifndef SERVER_PORT1
@@ -116,12 +116,10 @@ void setup() {
   pinMode(recordLed, OUTPUT);
   pinMode(TCPLed, OUTPUT);
 }
-int count = 1;
+
 void loop() {
   startRecording();
-  Serial.println(count);
   delay(3000);
-  count++;
 }
 //////////////////////////////////
 
