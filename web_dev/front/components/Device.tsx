@@ -38,7 +38,7 @@ const Device = React.memo(() => {
                 <div className='flex gap-10 ml-5'>
                     <div>
 
-                        <Image src={'/compo.jpeg'} className='max-w-none' width={400} height={50} alt={''}></Image>
+                        <Image src={'/espduino.jpeg'} className='max-w-none' width={400} height={50} alt={''}></Image>
                     </div>
                     <div className='shrink-0' >
                         <h1 className='mb-10'>
