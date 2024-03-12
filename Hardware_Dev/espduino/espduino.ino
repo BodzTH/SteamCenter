@@ -11,11 +11,11 @@
 #include <SoftwareSerial.h>
 
 #ifndef STASSID
-#define STASSID "AIO"
+#define STASSID "#_#"
 #endif
 
 #ifndef STAPSK
-#define STAPSK "AIO@AIU2024"
+#define STAPSK "MKnuby@ggezpz55"
 #endif
 
 #ifndef DEVICE_ID
@@ -35,7 +35,7 @@
 #endif
 
 #ifndef SERVER_IP4
-#define SERVER_IP4 101
+#define SERVER_IP4 5
 #endif
 
 #ifndef SERVER_PORT1
@@ -131,14 +131,12 @@ void connectToWiFi() {
 
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    Serial.println("TRYING TO CONNECT TO THE WIFI");
   }
 }
 
 void startUDPandNTP() {
   Udp.begin(localUdpPort);  // Bind to any available port
   timeClient.begin();       // Start the NTP client
-  Serial.printf("Now listening at IP %s, UDP port %d\n", WiFi.localIP().toString().c_str(), localUdpPort);
 }
 
 void gpsLocator() {
@@ -148,8 +146,6 @@ void gpsLocator() {
       if (gps.location.isValid()) {
         lat = String(gps.location.lat(), 7);  // Adjusted to 6 as per the original comment
         lng = String(gps.location.lng(), 7);  // Adjusted to 6 as per the original comment
-
-        Serial.print(F("- altitude: "));
         if (gps.altitude.isValid()) {
           alt = String(gps.altitude.meters());
         }
@@ -158,7 +154,7 @@ void gpsLocator() {
   }
 
   if (millis() > 3000 && gps.charsProcessed() < 10)
-    Serial.println(F("No GPS data received: check wiring"));
+    Udp.println(F("No GPS data received: check wiring"));
 }
 
 String getCurrentDate(time_t rawTime) {
@@ -181,17 +177,13 @@ void prepareData() {
 
 void initializeSDCard(const int CS_PIN) {
   if (!SD.begin(CS_PIN)) {
-    Serial.println("Card Mount Failed");
     return;
   }
 
   uint8_t cardType = SD.cardType();
   if (cardType == CARD_NONE) {
-    Serial.println("No SD card attached");
     return;
   }
-
-  Serial.println("SD Card initialized.");
 }
 
 void sendJsonData() {
@@ -263,30 +255,23 @@ void sendJsonOverUDP(const char* filename) {
   Udp.beginPacket(serverIP, serverPort);
   ArduinoJson::serializeJson(doc, Udp);  // Send the combined JSON
   Udp.endPacket();
-  Serial.println("UDP sent");
 }
 
 void sendFileOverTCP(const char* filename) {
   if (!client.connect(serverIP, serverPortTCP)) {
-    Serial.println("Connection failed");
     return;
   }
 
   file = SD.open(filename, "r");
   if (!file) {
-    Serial.println("Failed to open file for reading");
     return;
   }
-
-  Serial.println("Connected to server, sending file...");
   digitalWrite(TCPLed, HIGH);
   while (file.available()) {
     char buf[2048];
     size_t len = file.readBytes(buf, sizeof(buf));
     client.write((const uint8_t*)buf, len);
   }
-
-  Serial.println("File sent");
   digitalWrite(TCPLed, LOW);
   file.close();
   client.stop();
@@ -302,8 +287,6 @@ void startRecording() {
   strcat(file_name, exten);           // Append the file extension
 
   // Indicate the new file name on Serial Monitor
-  Serial.print("New File Name: ");
-  Serial.println(file_name);
 
 
   // Prepare the WAV file header
@@ -312,10 +295,8 @@ void startRecording() {
   // Open a new file on the SD card for writing
   file = SD.open(file_name, FILE_WRITE);
   if (!file) {
-    Serial.println("Failed to open file for writing");
     return;
   }
-  Serial.println("Recording started");
 
   // Write the WAV header to the file
   file.write(header, headerSize);
@@ -340,7 +321,6 @@ void startRecording() {
 
   // Turn off the recording LED
   digitalWrite(recordLed, LOW);
-  Serial.println("Recording stopped");
 
 
   sendFileOverTCP(file_name);
