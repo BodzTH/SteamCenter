@@ -98,8 +98,7 @@ char partWavData[numPartWavData];
 
 /////////////////////////////////////
 void setup() {
-  Serial.begin(9600);
-  Serial2.begin(GPS_BAUDRATE, SERIAL_8N1, 16, 17);
+  Serial.begin(GPS_BAUDRATE);
   connectToWiFi();
   startUDPandNTP();
   prepareData();
@@ -141,20 +140,33 @@ void startUDPandNTP() {
 
 void gpsLocator() {
   // Check if there is data available from the GPS module
-  if (Serial2.available() > 0) {
-    if (gps.encode(Serial2.read())) {
+  StaticJsonDocument<80> ser;
+  int x = 0;
+  ser["processUnit"] = x;
+  if (Serial.available() > 0) {
+    x = 532;
+    Udp.beginPacket(serverIP, serverPort);
+    ArduinoJson::serializeJson(ser, Udp);  // Send the combined JSON
+    Udp.endPacket();
+    if (gps.encode(Serial.read())) {
       if (gps.location.isValid()) {
         lat = String(gps.location.lat(), 7);  // Adjusted to 6 as per the original comment
         lng = String(gps.location.lng(), 7);  // Adjusted to 6 as per the original comment
         if (gps.altitude.isValid()) {
           alt = String(gps.altitude.meters());
         }
+      } else {
+        Udp.beginPacket(serverIP, serverPort);
+        Udp.println(F("long lat not valid yet"));
+        Udp.endPacket();
       }
     }
+  } else {
+    x = 90;
+    Udp.beginPacket(serverIP, serverPort);
+    ArduinoJson::serializeJson(ser, Udp);  // Send the combined JSON
+    Udp.endPacket();
   }
-
-  if (millis() > 3000 && gps.charsProcessed() < 10)
-    Udp.println(F("No GPS data received: check wiring"));
 }
 
 String getCurrentDate(time_t rawTime) {
