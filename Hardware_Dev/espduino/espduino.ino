@@ -324,9 +324,6 @@ void startRecording() {
   sendJsonOverUDP(file_name);
   digitalWrite(recordLed, HIGH);
   // Read and write the audio data in chunks
-
-  // Reset decibel array index for new recording
-  decibelIndex = 0;
   for (int j = 0; j < waveDataSize / numPartWavData; ++j) {
     I2S_Read(communicationData, numCommunicationData);  // Read data from I2S
     // Process the raw data to fit WAV format requirements
@@ -334,30 +331,6 @@ void startRecording() {
       // Convert 32-bit samples to 16-bit and store them
       partWavData[2 * i] = communicationData[8 * i + 2];
       partWavData[2 * i + 1] = communicationData[8 * i + 3];
-    }
-    // Calculate RMS value for decibel calculation based on the processed 16-bit samples
-    int64_t sumSquares = 0;
-    for (int i = 0; i < numPartWavData / 2; i++) {
-      int16_t sample = (int16_t)((partWavData[2 * i + 1] << 8) | (partWavData[2 * i] & 0xFF));
-      sumSquares += (int64_t)sample * (int64_t)sample;
-    }
-    float rms = sqrt((float)sumSquares / (numPartWavData / 2));
-
-    // Convert RMS to decibel; assuming 1.0 as reference RMS
-    float decibelValue = 20 * log10(rms / 1.0f);
-
-    // Store the calculated decibel value if space is available
-    if (decibelIndex < MAX_DECIBEL_VALUES) {
-      decibel[decibelIndex++] = decibelValue;
-    }
-
-    Serial.println("Decibel Levels:");
-    for (int i = 0; i < decibelIndex; ++i) {
-      Serial.print("Second ");
-      Serial.print(i + 1);
-      Serial.print(": ");
-      Serial.println(decibel[i], 2);  // Print with two decimal places
-      delay(1000);
     }
     // Write the processed audio data to the file
     file.write((const byte*)partWavData, numPartWavData);
