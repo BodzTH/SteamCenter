@@ -9,6 +9,7 @@
 #include "I2S.h"
 #include <SD.h>
 #include <SoftwareSerial.h>
+#include <cmath>
 
 #ifndef STASSID
 #define STASSID "#_#"
@@ -54,6 +55,9 @@
 #define GPS_BAUDRATE 9600  // The default baudrate of NEO-6M is 9600
 #endif
 
+#ifndef MAX_DECIBEL_VALUES
+#define MAX_DECIBEL_VALUES 1000
+#endif
 // Global variable declaration
 const int deviceId = DEVICE_ID;
 IPAddress serverIP(SERVER_IP1, SERVER_IP2, SERVER_IP3, SERVER_IP4);
@@ -66,6 +70,10 @@ String alt = "0";
 String currentDate;
 String currentTime;
 
+float decibel[MAX_DECIBEL_VALUES];
+int decibelIndex = 0;  // Tracks the next insert position in the decibel array
+
+
 StaticJsonDocument<50> checkId;
 char packetBuffer[100];
 
@@ -77,8 +85,8 @@ WiFiClient client;
 File file;
 
 // SD card pin
-const int CS_PIN = 5;        // Use the correct chip select pin for your setup
-const int record_time = 10;  // second
+const int CS_PIN = 5;       // Use the correct chip select pin for your setup
+const int record_time = 8;  // second
 int file_number = 1;
 char filePrefixname[50] = "Noise";
 char exten[10] = ".wav";
@@ -316,6 +324,9 @@ void startRecording() {
   sendJsonOverUDP(file_name);
   digitalWrite(recordLed, HIGH);
   // Read and write the audio data in chunks
+
+  // Reset decibel array index for new recording
+  decibelIndex = 0;
   for (int j = 0; j < waveDataSize / numPartWavData; ++j) {
     I2S_Read(communicationData, numCommunicationData);  // Read data from I2S
     // Process the raw data to fit WAV format requirements
@@ -323,6 +334,30 @@ void startRecording() {
       // Convert 32-bit samples to 16-bit and store them
       partWavData[2 * i] = communicationData[8 * i + 2];
       partWavData[2 * i + 1] = communicationData[8 * i + 3];
+    }
+    // Calculate RMS value for decibel calculation based on the processed 16-bit samples
+    int64_t sumSquares = 0;
+    for (int i = 0; i < numPartWavData / 2; i++) {
+      int16_t sample = (int16_t)((partWavData[2 * i + 1] << 8) | (partWavData[2 * i] & 0xFF));
+      sumSquares += (int64_t)sample * (int64_t)sample;
+    }
+    float rms = sqrt((float)sumSquares / (numPartWavData / 2));
+
+    // Convert RMS to decibel; assuming 1.0 as reference RMS
+    float decibelValue = 20 * log10(rms / 1.0f);
+
+    // Store the calculated decibel value if space is available
+    if (decibelIndex < MAX_DECIBEL_VALUES) {
+      decibel[decibelIndex++] = decibelValue;
+    }
+
+    Serial.println("Decibel Levels:");
+    for (int i = 0; i < decibelIndex; ++i) {
+      Serial.print("Second ");
+      Serial.print(i + 1);
+      Serial.print(": ");
+      Serial.println(decibel[i], 2);  // Print with two decimal places
+      delay(1000);
     }
     // Write the processed audio data to the file
     file.write((const byte*)partWavData, numPartWavData);

@@ -1,38 +1,34 @@
-import librosa
 import numpy as np
-import matplotlib.pyplot as plt
+from scipy.io import wavfile
 
-# Load the audio file
-filename = "/home/bodz/SteamCenter/2024_Noise_Recordings/February/Feb29_24/Noise1/Noise1.wav"  # Make sure to put the correct path to your file
-y, sr = librosa.load(filename, sr=None)  # Load with the original sampling rate
+def calculate_db(audio_data):
+    # Convert audio data to float and handle possible zero values
+    audio_data = audio_data.astype(np.float32)
+    audio_data = np.maximum(audio_data, 1e-10)  # Avoid division by zero
+    
+    # Calculate decibel levels
+    db_levels = 20 * np.log10(np.abs(audio_data))
+    return np.mean(db_levels), np.max(db_levels)
 
-# Calculate the Short-Time Fourier Transform (STFT) and convert to decibels
-D = librosa.stft(y)
-D_db = librosa.amplitude_to_db(np.abs(D), ref=np.max)
+def main(audio_file):
+    # Read audio file
+    rate, data = wavfile.read(audio_file)
+    
+    # Ensure the audio is mono (single-channel)
+    if len(data.shape) > 1:
+        data = data[:, 0]
+    
+    print("* Analyzing audio...")
 
-# Calculate average and peak decibel levels
-avg_db = np.mean(D_db)
-peak_db = np.max(D_db)
+    # Calculate average and maximum decibel levels
+    avg_db, max_db = calculate_db(data)
+    
+    print("* Analysis finished.")
+    
+    print("Avg. Decibel level = {:.2f}".format(avg_db))
+    print("Highest Decibel level = {:.2f}".format(max_db))
+    print("Frequency = {} Hz".format(rate))
 
-# Calculate RMS level in dB
-rms = np.sqrt(np.mean(np.abs(y) ** 2))
-rms_db = 20 * np.log10(rms)
-
-# Frequency analysis to find the most prominent frequency
-S, phase = librosa.magphase(D)
-freqs = librosa.fft_frequencies(sr=sr, n_fft=D.shape[0])
-prominent_freq_index = np.argmax(np.sum(S, axis=1))
-prominent_freq = freqs[prominent_freq_index]
-
-print(f"Average Decibel Level: {avg_db:.2f} dB")
-print(f"Peak Decibel Level: {peak_db:.2f} dB")
-print(f"RMS Decibel Level: {rms_db:.2f} dB")
-print(f"Most Prominent Frequency: {prominent_freq:.2f} Hz")
-
-# Optional: Plot the Spectrogram
-plt.figure(figsize=(10, 4))
-librosa.display.specshow(D_db, sr=sr, x_axis="time", y_axis="log", cmap="coolwarm")
-plt.colorbar(format="%+2.0f dB")
-plt.title("Spectrogram")
-plt.tight_layout()
-plt.show()
+if __name__ == "__main__":
+    audio_file = "drum-n-bass-loop-drum-perc-89802.wav"
+    main(audio_file)

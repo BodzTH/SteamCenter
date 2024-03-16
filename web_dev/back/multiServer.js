@@ -5,6 +5,7 @@ const net = require("net");
 const fs = require("fs");
 const path = require("path");
 const mongoose = require("mongoose");
+const { spawn } = require("child_process");
 
 const IP = process.env.IP2;
 const PORT = process.env.PORTUDP1;
@@ -205,7 +206,31 @@ server.on("message", async (msg, rinfo) => {
           fileName
         );
         console.log(outputPath);
+        // Wrap the Python script execution in a Promise and use await to wait for it to resolve
+        const pythonOutput = await new Promise((resolve, reject) => {
+          const python = spawn("python3", [
+            "/home/bodz/SteamCenter/urban8K_AI_Model/classifier.py",
+            outputPath,
+          ]);
 
+          let dataBuffer = "";
+          python.stdout.on("data", (data) => {
+            dataBuffer += data; // Collect data from stdout
+          });
+
+          python.stderr.on("data", (data) => {
+            console.error(`stderr: ${data}`);
+            reject(data.toString()); // Reject the Promise if there's an error
+          });
+
+          python.on("close", (code) => {
+            console.log(`Child process exited with code ${code}`);
+            resolve(dataBuffer); // Resolve the Promise with the collected data
+          });
+        });
+
+        console.log(`Python script output: ${pythonOutput}`);
+        // Process the pythonOutput as needed
         // Assuming date and time are defined elsewhere in your code
         const newLog = new Model1({
           deviceId: deviceId,
