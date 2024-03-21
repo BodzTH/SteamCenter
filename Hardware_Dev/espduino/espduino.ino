@@ -55,9 +55,6 @@
 #define GPS_BAUDRATE 9600  // The default baudrate of NEO-6M is 9600
 #endif
 
-#ifndef MAX_DECIBEL_VALUES
-#define MAX_DECIBEL_VALUES 1000
-#endif
 // Global variable declaration
 const int deviceId = DEVICE_ID;
 IPAddress serverIP(SERVER_IP1, SERVER_IP2, SERVER_IP3, SERVER_IP4);
@@ -69,10 +66,6 @@ String lat = "0";
 String alt = "0";
 String currentDate;
 String currentTime;
-
-float decibel[MAX_DECIBEL_VALUES];
-int decibelIndex = 0;  // Tracks the next insert position in the decibel array
-
 
 StaticJsonDocument<50> checkId;
 char packetBuffer[100];
@@ -108,6 +101,7 @@ char partWavData[numPartWavData];
 void setup() {
   Serial.begin(GPS_BAUDRATE);
   connectToWiFi();
+  delay(400);
   startUDPandNTP();
   prepareData();
   if (checkDeviceId()) {
@@ -295,6 +289,7 @@ void sendFileOverTCP(const char* filename) {
   digitalWrite(TCPLed, LOW);
   file.close();
   client.stop();
+  delay(1000);
 }
 
 void startRecording() {

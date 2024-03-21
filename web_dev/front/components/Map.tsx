@@ -51,7 +51,7 @@ function Mapdum({ deviceID }: { deviceID: Number }) {
     }, [deviceID]); // Dependency array to refetch if deviceID changes
 
     return position ? (
-        <MapContainer style={{ height: "50vh", width: "500px" }} center={position} zoom={15} scrollWheelZoom={false}>
+        <MapContainer className='images' style={{ height: "50vh", width: "500px" }} center={position} zoom={15} scrollWheelZoom={false}>
             <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

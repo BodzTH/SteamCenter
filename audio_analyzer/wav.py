@@ -1,34 +1,21 @@
+import librosa
 import numpy as np
-from scipy.io import wavfile
 
-def calculate_db(audio_data):
-    # Convert audio data to float and handle possible zero values
-    audio_data = audio_data.astype(np.float32)
-    audio_data = np.maximum(audio_data, 1e-10)  # Avoid division by zero
+def calculate_average_decibels(audio_file):
+    # Load the audio file
+    y, sr = librosa.load(audio_file, sr=None)
     
-    # Calculate decibel levels
-    db_levels = 20 * np.log10(np.abs(audio_data))
-    return np.mean(db_levels), np.max(db_levels)
+    # Calculate the amplitude to power (squared amplitude)
+    power = np.square(y)
+    
+    # Calculate the average power in the signal
+    avg_power = np.mean(power)
+    
+    # Convert average power to decibel
+    avg_db = 10 * np.log10(avg_power)
+    
+    return avg_db
 
-def main(audio_file):
-    # Read audio file
-    rate, data = wavfile.read(audio_file)
-    
-    # Ensure the audio is mono (single-channel)
-    if len(data.shape) > 1:
-        data = data[:, 0]
-    
-    print("* Analyzing audio...")
-
-    # Calculate average and maximum decibel levels
-    avg_db, max_db = calculate_db(data)
-    
-    print("* Analysis finished.")
-    
-    print("Avg. Decibel level = {:.2f}".format(avg_db))
-    print("Highest Decibel level = {:.2f}".format(max_db))
-    print("Frequency = {} Hz".format(rate))
-
-if __name__ == "__main__":
-    audio_file = "drum-n-bass-loop-drum-perc-89802.wav"
-    main(audio_file)
+audio_file = '2024_Noise_Recordings/March/Mar16_24/Noise1/Noise1.wav' # Update this to the path of your audio file
+avg_decibels = calculate_average_decibels(audio_file)
+print(f'Average Decibel Level: {avg_decibels:.2f} dB')

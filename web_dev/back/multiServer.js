@@ -73,7 +73,7 @@ function receiveFile(serverIp, serverPort, directoryPath, fileName) {
   });
 }
 
-function createDirectoryInDateDirectory(directoryName, dateString) {
+function createDirectoryInDateDirectory(directoryName, dateString, deviceName) {
   // Parse the date string
   const date = new Date(dateString);
   const year = date.getFullYear();
@@ -88,6 +88,7 @@ function createDirectoryInDateDirectory(directoryName, dateString) {
   const directoryPath = path.resolve(
     "/home/bodz/SteamCenter/",
     "2024_Noise_Recordings",
+    deviceName,
     month, // Use the full month name
     dayYearFolderName, // Use the formatted day and year name
     directoryName // Add the directoryName to the path
@@ -100,6 +101,22 @@ function createDirectoryInDateDirectory(directoryName, dateString) {
 
   // Return the full path of the created directory
   return directoryPath;
+}
+
+function createJsonFile(folderPath, data) {
+  // Ensure the directory exists
+  fs.mkdirSync(folderPath, { recursive: true });
+
+  // Create the JSON file path
+  const filePath = path.join(folderPath, "data.json");
+
+  // Convert the data object to a JSON string
+  const jsonData = JSON.stringify(data, null, 2);
+
+  // Write the JSON string to a file
+  fs.writeFileSync(filePath, jsonData);
+
+  console.log(`JSON file has been saved to ${filePath}`);
 }
 
 server.on("message", async (msg, rinfo) => {
@@ -178,12 +195,12 @@ server.on("message", async (msg, rinfo) => {
     data.hasOwnProperty("deviceId") &&
     data.hasOwnProperty("filename")
   ) {
-    let Latitude = parseFloat(data.Latitude);
-    let Longitude = parseFloat(data.Longitude);
-    let Altitude = parseFloat(data.Altitude);
-    let date = data.date;
-    let time = data.time;
-    let deviceId = data.deviceId;
+    const Latitude = parseFloat(data.Latitude);
+    const Longitude = parseFloat(data.Longitude);
+    const Altitude = parseFloat(data.Altitude);
+    const date = data.date;
+    const time = data.time;
+    const deviceId = data.deviceId;
     let folderName = data.filename;
     let fileName = data.filename;
     // Remove the leading slash
@@ -195,7 +212,12 @@ server.on("message", async (msg, rinfo) => {
     folderName = folderName.replace(".wav", "");
 
     console.log(folderName); // Outputs: Noise1
-    const folderPath = createDirectoryInDateDirectory(folderName, date);
+    const device = await Model2.findOne({ deviceId: deviceId });
+    const folderPath = createDirectoryInDateDirectory(
+      folderName,
+      date,
+      device.deviceName
+    );
 
     async function handleFileReception(IP, TCP_PORT, folderPath, fileName) {
       try {
@@ -206,31 +228,7 @@ server.on("message", async (msg, rinfo) => {
           fileName
         );
         console.log(outputPath);
-        // Wrap the Python script execution in a Promise and use await to wait for it to resolve
-        const pythonOutput = await new Promise((resolve, reject) => {
-          const python = spawn("python3", [
-            "/home/bodz/SteamCenter/urban8K_AI_Model/classifier.py",
-            outputPath,
-          ]);
 
-          let dataBuffer = "";
-          python.stdout.on("data", (data) => {
-            dataBuffer += data; // Collect data from stdout
-          });
-
-          python.stderr.on("data", (data) => {
-            console.error(`stderr: ${data}`);
-            reject(data.toString()); // Reject the Promise if there's an error
-          });
-
-          python.on("close", (code) => {
-            console.log(`Child process exited with code ${code}`);
-            resolve(dataBuffer); // Resolve the Promise with the collected data
-          });
-        });
-
-        console.log(`Python script output: ${pythonOutput}`);
-        // Process the pythonOutput as needed
         // Assuming date and time are defined elsewhere in your code
         const newLog = new Model1({
           deviceId: deviceId,
@@ -242,11 +240,35 @@ server.on("message", async (msg, rinfo) => {
         // Save the new document to the database
         await newLog.save();
         console.log("New log saved to TempLogs database.");
+
+        // Return the output path
+        return outputPath;
       } catch (err) {
         console.error(`An error occurred: ${err}`);
       }
     }
-    handleFileReception(IP, TCP_PORT, folderPath, fileName);
+    handleFileReception(IP, TCP_PORT, folderPath, fileName)
+      .then((outputPath) => {
+        console.log("Output path:", outputPath);
+
+        // Run the Python script with outputPath as an argument
+        const pythonProcess = spawn("python3", ["/home/bodz/SteamCenter/urban8K_AI_Model/classifier.py", outputPath]);
+
+        // Handle output
+        pythonProcess.stdout.on("data", (data) => {
+          console.log(`Python script output: ${data}`);
+        });
+
+        // Handle error
+        pythonProcess.stderr.on("data", (data) => {
+          console.error(`Python script error: ${data}`);
+        });
+      })
+      .catch((err) => {
+        console.error("An error occurred:", err);
+      });
+
+    createJsonFile(folderPath, data);
 
     // Update the 'devices' document with deviceId 1
     try {

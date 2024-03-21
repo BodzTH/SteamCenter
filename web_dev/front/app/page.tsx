@@ -19,7 +19,7 @@ function Home() {
       </div>
       <div>
         {
-          <Device />
+          <Device deviceid={1} />
         }
       </div>
 

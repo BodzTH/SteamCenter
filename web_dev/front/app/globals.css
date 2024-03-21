@@ -196,7 +196,8 @@ body {
 .searchbar {
   @apply flex items-center justify-between w-96 h-8 rounded-full bg-black outline-none transition-all duration-300;
   border: 2px solid black;
-  padding: 0 10px;
+  font-size: 21px;
+  padding: 10px 10px;
   color: white; /* Updated color to white */
 }
 
@@ -522,4 +523,30 @@ body {
 .main {
   width: 100vw;
   height: 100vh;
+}
+
+.buttons {
+  padding: 10px 15px;
+  font-size: 25px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 60px;
+  width: 95vw;
+  background: #000;
+  color: #ffffff;
+  border: black;
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+}
+
+.buttons:hover,
+.buttons:focus {
+  background: white;
+  color: black;
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+  box-sizing: border-box;
+  outline: 2px solid black;
+}
+
+.images{
+  border-radius: 20px;
 }
