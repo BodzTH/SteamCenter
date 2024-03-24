@@ -15,9 +15,7 @@ function Records() {
     // Add other properties as needed
   }
   const { deviceid } = useParams() ?? { deviceid: '' };
-  const [data, setData] = useState([] as RecordData[]);
-  const [selected, setSelected] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState({} as RecordData);
+  const [data, setData] = useState(null as RecordData | null);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -31,19 +29,14 @@ function Records() {
 
     fetchData();
   }, []);
-  useEffect(() => {
-    if (selected) {
-      setSelectedRecord(data.find((record) => record._id === selectedRecord._id) || {} as RecordData);
-    }
-  }, [selected, selectedRecord._id]);
   return (
     <>
       <div className='flex'>
         <div>
           <ul className=''>
             <div className='recDetails'>
-              <li>DATE: {selectedRecord && selectedRecord?.date}</li>
-              <li>TIME: {selectedRecord && selectedRecord?.time}</li>
+              <li>DATE: {data && data?.date}</li>
+              <li>TIME: {data && data?.time}</li>
             </div>
             <div className='recDetails'>
               <li>CAUSE OF NOISE: { }</li>
@@ -58,9 +51,7 @@ function Records() {
         <div className='ml-20'>
           {
             data && data?.map((record: RecordData) => (
-              <AudiosBlock key={record._id} path={record.filepath} id={record._id} openDetails={function (id: number): void {
-                throw new Error('Function not implemented.');
-              }} />
+              <AudiosBlock key={record._id} path={record.filepath} />
             ))
           }
         </div>
