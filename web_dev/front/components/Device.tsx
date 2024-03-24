@@ -106,11 +106,10 @@ const Device = React.memo(({ deviceid }: { deviceid: number }) => {
                         </div>
                     </div>
                 </div>
-                <Link href="records/2">
+                <Link href={`records/${deviceid}`}>
                     <button className="buttons mt-5 mx-10 ">Go to device recordings data</button>
                 </Link>
             </div>
-
         </>
     );
 });

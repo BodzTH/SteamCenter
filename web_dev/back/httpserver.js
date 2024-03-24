@@ -3,6 +3,8 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const mongoose = require("mongoose");
+const serveStatic = require("serve-static");
+const path = require("path");
 
 app.use(express.json()); // For parsing application/json
 app.use(cors());
@@ -57,6 +59,29 @@ app.get("/device/:id", async (req, res) => {
     console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
   }
+});
+
+app.get("/records/:id", async (req, res) => {
+  try {
+    const records = await Model1.find({ deviceId: req.params.id });
+    if (!records) {
+      return res.status(404).json({ error: "Device not found" });
+    }
+    res.json(records);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.use("/files/:path", function (req, res) {
+  const filePath = path.join("/home",req.path);
+  res.sendFile(filePath, function (err) {
+    if (err) {
+      console.error("Failed to send file:", err);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  });
 });
 
 const port = process.env.PORTHTTP; // Set the port number

@@ -547,6 +547,10 @@ body {
   outline: 2px solid black;
 }
 
-.images{
+.images {
   border-radius: 20px;
+}
+
+.recDetails {
+  @apply flex gap-28 ml-10 mb-10;
 }
