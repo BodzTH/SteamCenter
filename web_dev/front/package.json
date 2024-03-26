@@ -29,7 +29,8 @@
     "react-dom": "^18.2.0",
     "react-leaflet": "^4.2.1",
     "react-player": "^2.15.1",
-    "react-world-flags": "^1.6.0"
+    "react-world-flags": "^1.6.0",
+    "zustand": "^4.5.2"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",

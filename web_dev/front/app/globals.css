@@ -554,3 +554,11 @@ body {
 .recDetails {
   @apply flex gap-28 ml-10 mb-10;
 }
+
+.textBlock {
+  border-radius: 20px;
+  border: 3px solid black;
+  min-width: 400px;
+  max-height: 480px;
+  padding: 10px;
+}

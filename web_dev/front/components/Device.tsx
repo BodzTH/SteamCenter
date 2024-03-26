@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Map from './index';
 import Link from 'next/link';
+import { useStore } from '@/geos';
 
 const Device = React.memo(({ deviceid }: { deviceid: number }) => {
     interface DeviceData {
@@ -32,6 +33,8 @@ const Device = React.memo(({ deviceid }: { deviceid: number }) => {
     const [deviceData, setDeviceData] = useState<DeviceData | null>(null);
     const deviceID = deviceid;
 
+    const { setCity, setArea, setStreet, setFullAddress } = useStore();
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -45,26 +48,30 @@ const Device = React.memo(({ deviceid }: { deviceid: number }) => {
                 // Second request to get geocode information
                 const geoResponse = await axios.get(`https://geocode.maps.co/reverse?lat=${latitude}&lon=${longitude}&api_key=${process.env.NEXT_PUBLIC_MAPS_API_KEY}`);
                 setData(geoResponse.data);
+                setCity(geoResponse.data.address.city);
+                setArea(geoResponse.data.address.neighbourhood);
+                setStreet(geoResponse.data.address.village);
+                setFullAddress(geoResponse.data.display_name);
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
         };
 
         fetchData();
-    }, []);
+    }, [deviceID]);
 
     Device.displayName = 'Device';
 
     return (
         <>
             <div className='border-border-color border-b-2 pb-5 mb-10'>
-                <div className='flex  gap-64 '>
+                <div className='flex  gap-20 '>
                     <div className='flex gap-10 ml-5'>
                         <div>
 
                             <Image src={'/espduino.jpeg'} className='max-w-none images' width={400} height={50} alt={''}></Image>
                         </div>
-                        <div className='shrink-0' >
+                        <div className='shrink-0 textBlock' >
                             <h1 className='mb-10'>
                                 ProcessUnit : {deviceData?.processUnit}
                             </h1>
@@ -80,8 +87,8 @@ const Device = React.memo(({ deviceid }: { deviceid: number }) => {
                         </div>
                     </div>
                     <div className='flex gap-10'>
-                        <Map deviceID={1} />
-                        <div>
+                        <Map deviceID={1} height={""} />
+                        <div className='textBlock'>
                             <h1 className='mb-10'>
                                 Place_id : {data?.place_id}
                             </h1>

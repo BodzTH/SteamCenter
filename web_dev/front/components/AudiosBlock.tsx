@@ -1,14 +1,27 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactPlayer from 'react-player';
+interface AudiosBlockProps {
+    path: string;
+    id: number;
+    sendDataToParent: (id: number) => void;
+}
 
-function AudiosBlock({ path }: { path: string }) {
+function AudiosBlock({ id, path, sendDataToParent }: AudiosBlockProps) {
     const [isSelected, setIsSelected] = useState(false);
 
     const handleClick = () => {
         setIsSelected(!isSelected);
     };
+    useEffect(() => {
+        if (isSelected) {
+            sendDataToParent(id);
+        }
+        else {
+            sendDataToParent(0);
+        }
 
-
+    }
+        , [isSelected]);
 
     return (
         <div>
