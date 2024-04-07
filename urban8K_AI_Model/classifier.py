@@ -1,10 +1,9 @@
 import sys
-import os
 from speechbrain.inference.classifiers import EncoderClassifier
 
 output_path = sys.argv[1]
 model_dir = (
-    "/home/bodz/SteamCenter/urban8K_AI_Model/pretrained_models/gurbansound8k_ecapa"
+    "/home/bodz/AIO_Project/urban8K_AI_Model/pretrained_models/gurbansound8k_ecapa"
 )
 
 classifier = EncoderClassifier.from_hparams(

@@ -86,7 +86,7 @@ function createDirectoryInDateDirectory(directoryName, dateString, deviceName) {
 
   // Construct the directory path
   const directoryPath = path.resolve(
-    "/home/bodz/SteamCenter/",
+    "/home/bodz/AIO_Project/",
     "2024_Noise_Recordings",
     deviceName,
     month, // Use the full month name
@@ -252,7 +252,7 @@ server.on("message", async (msg, rinfo) => {
         console.log("Output path:", outputPath);
 
         // Run the Python script with outputPath as an argument
-        const pythonProcess = spawn("python3", ["/home/bodz/SteamCenter/urban8K_AI_Model/classifier.py", outputPath]);
+        const pythonProcess = spawn("/home/bodz/speechbrain_env/bin/python", ["/home/bodz/AIO_Project/urban8K_AI_Model/classifier.py", outputPath]);
 
         // Handle output
         pythonProcess.stdout.on("data", (data) => {

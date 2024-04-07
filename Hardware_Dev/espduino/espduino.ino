@@ -16,7 +16,7 @@
 #endif
 
 #ifndef STAPSK
-#define STAPSK "MKnuby@ggezpz55"
+#define STAPSK "R@t0ha.35"
 #endif
 
 #ifndef DEVICE_ID
@@ -36,7 +36,7 @@
 #endif
 
 #ifndef SERVER_IP4
-#define SERVER_IP4 5
+#define SERVER_IP4 7
 #endif
 
 #ifndef SERVER_PORT1
